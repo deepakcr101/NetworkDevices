@@ -1,0 +1,14 @@
+
+@host = http://localhost:8080
+POST{{host}}/api/devices
+Content-Type: application/json
+Accept: application/json
+
+{
+  "deviceName": "Device 1",
+  "partNumber": "PN-101",
+  "buildingName": "TRIL4",
+  "deviceType": "Router",
+  "numberOfShelfPositions": 6
+}
+
