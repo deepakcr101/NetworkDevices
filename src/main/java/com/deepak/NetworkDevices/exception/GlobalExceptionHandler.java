@@ -1,19 +1,18 @@
 package com.deepak.NetworkDevices.exception;
 
 import com.deepak.NetworkDevices.dto.error.ApiError;
-
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
-@RestControllerAdvice
-public class ApiExceptionHandler {
+@ControllerAdvice
+public class GlobalExceptionHandler {
 
     @ExceptionHandler(NotFoundException.class)
     public ResponseEntity<ApiError> handleNotFound(NotFoundException ex, HttpServletRequest req) {
@@ -25,20 +24,20 @@ public class ApiExceptionHandler {
         return build(HttpStatus.CONFLICT, "CONFLICT", ex.getMessage(), req);
     }
 
-    @ExceptionHandler(ValidationException.class)
-    public ResponseEntity<ApiError> handleValidation(ValidationException ex, HttpServletRequest req) {
-        return build(HttpStatus.BAD_REQUEST, "VALIDATION_ERROR", ex.getMessage(), req);
+    @ExceptionHandler(BadRequestException.class)
+    public ResponseEntity<ApiError> handleBadRequest(BadRequestException ex, HttpServletRequest req) {
+        return build(HttpStatus.BAD_REQUEST, "BAD_REQUEST", ex.getMessage(), req);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ApiError> handleBeanValidation(MethodArgumentNotValidException ex, HttpServletRequest req) {
-        String msg = ex.getBindingResult().getAllErrors().stream()
-                .findFirst().map(e -> e.getDefaultMessage()).orElse("Invalid request");
+    public ResponseEntity<ApiError> handleValidation(MethodArgumentNotValidException ex, HttpServletRequest req) {
+        var msg = ex.getBindingResult().getAllErrors().stream()
+                .map(err -> err.getDefaultMessage()).findFirst().orElse("Validation failed");
         return build(HttpStatus.BAD_REQUEST, "VALIDATION_ERROR", msg, req);
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ApiError> handleOther(Exception ex, HttpServletRequest req) {
+    public ResponseEntity<ApiError> handleGeneric(Exception ex, HttpServletRequest req) {
         return build(HttpStatus.INTERNAL_SERVER_ERROR, "INTERNAL_ERROR", ex.getMessage(), req);
     }
 
@@ -50,8 +49,8 @@ public class ApiExceptionHandler {
                 message,
                 req.getRequestURI(),
                 UUID.randomUUID().toString(),
-                OffsetDateTime.now()
-        );
+                OffsetDateTime.now());
         return ResponseEntity.status(status).body(err);
     }
 }
+

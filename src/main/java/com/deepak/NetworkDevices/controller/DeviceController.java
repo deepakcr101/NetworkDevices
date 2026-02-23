@@ -1,50 +1,56 @@
 package com.deepak.NetworkDevices.controller;
 
-import com.deepak.NetworkDevices.dto.CommonDTOs.IdResponse;
-import com.deepak.NetworkDevices.dto.DeviceDTOs.*;
+import com.deepak.NetworkDevices.dto.request.*;
+import com.deepak.NetworkDevices.dto.response.DeviceSummaryResponse;
 import com.deepak.NetworkDevices.service.DeviceService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.net.URI;
-import java.util.List;
-
 @RestController
-@RequestMapping("/api/devices")
+@RequestMapping("/api/v1/devices")
 public class DeviceController {
 
     private final DeviceService service;
 
-    public DeviceController(DeviceService service) {
-        this.service = service;
-    }
+    public DeviceController(DeviceService service) { this.service = service; }
 
-    @GetMapping
-    public ResponseEntity<List<DeviceResponse>> list(@RequestParam(defaultValue = "false") boolean includeDeleted) {
-        return ResponseEntity.ok(service.listDevices(includeDeleted));
-    }
-
-    @PostMapping
-    public ResponseEntity<IdResponse> create(@Valid @RequestBody CreateDeviceRequest req) {
-        String id = service.createDevice(req);
-        return ResponseEntity.created(URI.create("/api/devices/" + id)).body(new IdResponse(id));
-    }
-
-    @GetMapping("/{deviceId}")
-    public ResponseEntity<DeviceSummaryResponse> get(@PathVariable String deviceId) {
+    @GetMapping("/{deviceId}/summary")
+    public ResponseEntity<DeviceSummaryResponse> summary(@PathVariable String deviceId) {
         return ResponseEntity.ok(service.getDeviceSummary(deviceId));
     }
 
+    @PostMapping
+    public ResponseEntity<String> create(@Valid @RequestBody CreateDeviceRequest req) {
+        var id = service.createDevice(req);
+        return ResponseEntity.status(201).body(id);
+    }
+
     @PatchMapping("/{deviceId}")
-    public ResponseEntity<DeviceResponse> update(@PathVariable String deviceId,
-                                                 @RequestBody UpdateDeviceRequest req) {
-        return ResponseEntity.ok(service.updateDevice(deviceId, req));
+    public ResponseEntity<Void> update(@PathVariable String deviceId,
+                                       @RequestBody UpdateDeviceRequest req) {
+        service.updateDevice(deviceId, req);
+        return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/{deviceId}")
     public ResponseEntity<Void> delete(@PathVariable String deviceId) {
-        service.deleteDevice(deviceId);
+        service.softDeleteDevice(deviceId);
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/{deviceId}/positions/{shelfPositionId}:allocate")
+    public ResponseEntity<Void> allocate(@PathVariable String deviceId,
+                                         @PathVariable String shelfPositionId,
+                                         @Valid @RequestBody AllocateRequest req) {
+        service.allocate(deviceId, shelfPositionId, req);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/{deviceId}/positions/{shelfPositionId}:free")
+    public ResponseEntity<Void> free(@PathVariable String deviceId,
+                                     @PathVariable String shelfPositionId) {
+        service.free(deviceId, shelfPositionId);
+        return ResponseEntity.ok().build();
     }
 }

@@ -1,215 +1,133 @@
 package com.deepak.NetworkDevices.repo;
 
-import com.deepak.NetworkDevices.dto.DeviceDTOs.*;
-import com.deepak.NetworkDevices.exception.NotFoundException;
 import org.neo4j.driver.*;
-import org.neo4j.driver.types.Node;
+import org.neo4j.driver.Record;
 import org.springframework.stereotype.Repository;
 
 import java.util.*;
-import java.util.stream.Collectors;
-
-import static org.neo4j.driver.Values.parameters;
 
 @Repository
 public class DeviceRepository {
-
     private final Driver driver;
 
-    public DeviceRepository(Driver driver) {
-        this.driver = driver;
-    }
+    public DeviceRepository(Driver driver) { this.driver = driver; }
 
-    public String createDeviceWithPositions(
-            String deviceId,
-            CreateDeviceRequest req,
-            List<Map<String, Object>> positions,
-            long ts
-    ) {
-        try (Session session = driver.session()) {
-            return session.executeWrite(tx -> {
-                var res = tx.run("""
-            CREATE (d:Device {
-              deviceId: $deviceId,
-              deviceName: $deviceName,
-              partNumber: $partNumber,
-              buildingName: $buildingName,
-              deviceType: $deviceType,
-              numberOfShelfPositions: $n,
-              createdAt: $ts,
-              updatedAt: $ts,
-              deletedAt: NULL
-            })
-            WITH d, $positions AS positions, $ts AS ts
-               FOREACH (pos IN $positions |
-               CREATE (sp:ShelfPosition {
-                 shelfPositionId: pos.id,
-                 deviceId: d.deviceId,
-                 index: pos.idx,
-                 createdAt: $ts,
-                 updatedAt: $ts,
-                 deletedAt: NULL
-               })
-               CREATE (d)-[:HAS]->(sp)
-             )
-             RETURN d.deviceId AS deviceId
-            """,
-                        parameters(
-                                "deviceId", deviceId,
-                                "deviceName", req.deviceName(),
-                                "partNumber", req.partNumber(),
-                                "buildingName", req.buildingName(),
-                                "deviceType", req.deviceType(),
-                                "n", req.numberOfShelfPositions(),
-                                "positions", positions,
-                                "ts", ts
-                        )
-                );
-                var rec = res.single();
-                return rec.get("deviceId").asString();
-            });
-        }
-    }
-
-    public List<DeviceResponse> listDevices(boolean includeDeleted) {
+    public String createDevice(Map<String,Object> params) {
         String cypher = """
-      MATCH (d:Device)
-      WHERE $includeDeleted = true OR d.deletedAt IS NULL
-      RETURN d ORDER BY d.deviceName ASC
+      WITH randomUUID() AS did
+      CREATE (d:Device {
+        deviceId: did,
+        deviceName: $deviceName,
+        deviceType: $deviceType,
+        partNumber: $partNumber,
+        buildingName: $buildingName,
+        numberOfShelfPositions: $numSP,
+        isDeleted: false,
+        createdAt: datetime(),
+        updatedAt: datetime()
+      })
+      WITH d
+      UNWIND range(1, $numSP) AS idx
+      CREATE (p:ShelfPosition {
+        shelfPositionId: randomUUID(),
+        index: idx,
+        deviceId: d.deviceId,
+        shelfId: null,
+        isOccupied: false,
+        isDeleted: false,
+        createdAt: datetime(),
+        updatedAt: datetime()
+      })
+      CREATE (d)-[:HAS_POS]->(p)
+      RETURN d.deviceId AS deviceId
       """;
-        try (Session session = driver.session()) {
-            return session.executeRead(tx -> {
-                var result = tx.run(cypher, parameters("includeDeleted", includeDeleted));
-                List<DeviceResponse> list = new ArrayList<>();
-                while (result.hasNext()) {
-                    var r = result.next();
-                    var d = r.get("d").asNode();
-                    list.add(mapDevice(d));
-                }
-                return list;
-            });
+        try (var session = driver.session(SessionConfig.forDatabase(params.getOrDefault("database", "neo4j").toString()))) {
+            return session.executeWrite(tx -> tx.run(cypher, params).single().get("deviceId").asString());
         }
     }
 
-    public DeviceSummaryResponse getDeviceSummary(String deviceId) {
+    public Optional<Record> getDeviceSummary(String deviceId, String database) {
         String cypher = """
-      MATCH (d:Device {deviceId: $deviceId})
-      WHERE d.deletedAt IS NULL
-      OPTIONAL MATCH (d)-[:HAS]->(sp:ShelfPosition)
-      WHERE sp.deletedAt IS NULL
-      OPTIONAL MATCH (sp)-[:HAS]->(s:Shelf)
-      WHERE s.deletedAt IS NULL
-      RETURN d, sp, s
-      ORDER BY sp.index ASC
+      MATCH (d:Device {deviceId:$deviceId}) WHERE d.isDeleted=false
+      OPTIONAL MATCH (d)-[:HAS_POS]->(p:ShelfPosition) WHERE p.isDeleted=false
+      OPTIONAL MATCH (p)-[:PLACED_ON]->(s:Shelf) WHERE s.isDeleted=false
+      RETURN d,
+        collect({
+          shelfPositionId: p.shelfPositionId,
+          index: p.index,
+          isOccupied: p.isOccupied,
+          shelf: CASE WHEN s IS NULL THEN null ELSE {shelfId:s.shelfId, shelfName:s.shelfName, partName:s.partName} END
+        }) AS positions
       """;
-        try (Session session = driver.session()) {
+        try (var session = driver.session(SessionConfig.forDatabase(database))) {
             return session.executeRead(tx -> {
-                var result = tx.run(cypher, parameters("deviceId", deviceId));
-                DeviceResponse device = null;
-                Map<String, ShelfPositionSummary> posMap = new LinkedHashMap<>();
-                while (result.hasNext()) {
-                    var rec = result.next();
-                    if (device == null) {
-                        var dNode = rec.get("d").asNode();
-                        if (dNode == null) throw new NotFoundException("Device not found");
-                        device = mapDevice(dNode);
-                    }
-                    if (!rec.get("sp").isNull()) {
-                        var sp = rec.get("sp").asNode();
-                        String spId = sp.get("shelfPositionId").asString();
-                        int idx = (int) sp.get("index").asLong();
-                        boolean occupied = !rec.get("s").isNull();
-                        String shelfId = occupied ? rec.get("s").asNode().get("shelfId").asString() : null;
-                        String shelfName = occupied ? rec.get("s").asNode().get("shelfName").asString(null) : null;
-
-                        posMap.put(spId, new ShelfPositionSummary(spId, idx, occupied, shelfId, shelfName));
-                    }
-                }
-                if (device == null) throw new NotFoundException("Device not found");
-                var positions = posMap.values().stream().sorted(Comparator.comparingInt(ShelfPositionSummary::index)).collect(Collectors.toList());
-                return new DeviceSummaryResponse(device, positions);
+                var res = tx.run(cypher, Map.of("deviceId", deviceId));
+                return res.hasNext() ? Optional.of(res.single()) : Optional.empty();
             });
         }
     }
 
-    public DeviceResponse updateDevice(String deviceId, Map<String, Object> updates, long ts) {
-        // Only allow updating these fields
-        var allowed = Set.of("deviceName", "partNumber", "buildingName", "deviceType");
-        Map<String, Object> filtered = new HashMap<>();
-        updates.forEach((k, v) -> { if (allowed.contains(k) && v != null) filtered.put(k, v); });
-
-        if (filtered.isEmpty()) return getDeviceById(deviceId); // nothing to change
-
-        StringBuilder setClause = new StringBuilder("SET ");
-        int i = 0;
-        for (String key : filtered.keySet()) {
-            if (i++ > 0) setClause.append(", ");
-            setClause.append("d.").append(key).append(" = $").append(key);
-        }
-        setClause.append(", d.updatedAt = $ts");
-
-        String cypher = String.format("""
-      MATCH (d:Device {deviceId: $deviceId}) WHERE d.deletedAt IS NULL
-      %s
-      RETURN d
-      """, setClause);
-
-        try (Session session = driver.session()) {
-            return session.executeWrite(tx -> {
-                var params = new HashMap<String, Object>(filtered);
-                params.put("deviceId", deviceId);
-                params.put("ts", ts);
-                var res = tx.run(cypher, params);
-                if (!res.hasNext()) throw new NotFoundException("Device not found or deleted");
-                return mapDevice(res.single().get("d").asNode());
-            });
-        }
-    }
-
-    public DeviceResponse getDeviceById(String deviceId) {
+    public boolean updateDevice(String deviceId, Map<String,Object> updates, String database) {
         String cypher = """
-      MATCH (d:Device {deviceId: $deviceId})
-      WHERE d.deletedAt IS NULL
-      RETURN d
+      MATCH (d:Device {deviceId:$deviceId}) WHERE d.isDeleted=false
+      SET d += $updates, d.updatedAt=datetime()
+      RETURN d.deviceId AS id
       """;
-        try (Session session = driver.session()) {
-            return session.executeRead(tx -> {
-                var res = tx.run(cypher, parameters("deviceId", deviceId));
-                if (!res.hasNext()) throw new NotFoundException("Device not found");
-                return mapDevice(res.single().get("d").asNode());
-            });
+        try (var session = driver.session(SessionConfig.forDatabase(database))) {
+            return session.executeWrite(tx -> tx.run(cypher, Map.of("deviceId", deviceId, "updates", updates)).hasNext());
         }
     }
 
-    public void softDeleteDeviceCascade(String deviceId, long ts) {
+    public boolean softDeleteDevice(String deviceId, String database) {
         String cypher = """
-      MATCH (d:Device {deviceId: $deviceId}) WHERE d.deletedAt IS NULL
-      OPTIONAL MATCH (d)-[:HAS]->(sp:ShelfPosition) WHERE sp.deletedAt IS NULL
-      OPTIONAL MATCH (sp)-[r:HAS]->(s:Shelf) WHERE s.deletedAt IS NULL
+      MATCH (d:Device {deviceId:$deviceId}) WHERE d.isDeleted=false
+      SET d.isDeleted=true, d.updatedAt=datetime()
+      WITH d
+      OPTIONAL MATCH (d)-[:HAS_POS]->(p:ShelfPosition)
+      SET p.isDeleted=true, p.isOccupied=false, p.shelfId=null, p.updatedAt=datetime()
+      WITH d
+      OPTIONAL MATCH (d)-[:HAS_POS]->(:ShelfPosition)-[r:PLACED_ON]->(s:Shelf)
       DELETE r
-      SET d.deletedAt = $ts, d.updatedAt = $ts
-      SET sp.deletedAt = $ts, sp.updatedAt = $ts
-      RETURN d
+      SET s.updatedAt=datetime()
+      RETURN d.deviceId AS deviceId
       """;
-        try (Session session = driver.session()) {
-            session.executeWrite(tx -> {
-                var res = tx.run(cypher, parameters("deviceId", deviceId, "ts", ts));
-                if (!res.hasNext()) throw new NotFoundException("Device not found or already deleted");
-                return null;
+        try (var session = driver.session(SessionConfig.forDatabase(database))) {
+            return session.executeWrite(tx -> tx.run(cypher, Map.of("deviceId", deviceId)).hasNext());
+        }
+    }
+
+    public Optional<Record> allocate(String deviceId, String shelfPositionId, String shelfId, String database) {
+        String cypher = """
+      MATCH (d:Device {deviceId:$deviceId}) WHERE d.isDeleted=false
+      MATCH (d)-[:HAS_POS]->(p:ShelfPosition {shelfPositionId:$spId})
+        WHERE p.isDeleted=false AND p.isOccupied=false
+      MATCH (s:Shelf {shelfId:$shelfId}) WHERE s.isDeleted=false
+      AND NOT ( ()-[:PLACED_ON]->(s) )
+      CREATE (p)-[:PLACED_ON]->(s)
+      SET p.isOccupied=true, p.shelfId=s.shelfId, p.updatedAt=datetime(),
+          d.updatedAt=datetime(), s.updatedAt=datetime()
+      RETURN d.deviceId AS deviceId, p.shelfPositionId AS shelfPositionId, p.index AS index,
+             s.shelfId AS shelfId, s.shelfName AS shelfName
+      """;
+        try (var session = driver.session(SessionConfig.forDatabase(database))) {
+            return session.executeWrite(tx -> {
+                var result = tx.run(cypher, Map.of("deviceId", deviceId, "spId", shelfPositionId, "shelfId", shelfId));
+                return result.hasNext() ? Optional.of(result.single()) : Optional.empty();
             });
         }
     }
 
-    private DeviceResponse mapDevice(Node d) {
-        return new DeviceResponse(
-                d.get("deviceId").asString(),
-                d.get("deviceName").asString(),
-                d.get("partNumber").asString(),
-                d.get("buildingName").asString(),
-                d.get("deviceType").asString(),
-                (int) d.get("numberOfShelfPositions").asLong(),
-                d.get("createdAt").asLong(),
-                d.get("updatedAt").asLong()
-        );
+    public boolean free(String deviceId, String shelfPositionId, String database) {
+        String cypher = """
+      MATCH (d:Device {deviceId:$deviceId})-[:HAS_POS]->(p:ShelfPosition {shelfPositionId:$spId})
+      MATCH (p)-[r:PLACED_ON]->(s:Shelf)
+      DELETE r
+      SET p.isOccupied=false, p.shelfId=null, p.updatedAt=datetime(),
+          d.updatedAt=datetime(), s.updatedAt=datetime()
+      RETURN d.deviceId AS deviceId
+      """;
+        try (var session = driver.session(SessionConfig.forDatabase(database))) {
+            return session.executeWrite(tx -> tx.run(cypher, Map.of("deviceId", deviceId, "spId", shelfPositionId)).hasNext());
+        }
     }
 }

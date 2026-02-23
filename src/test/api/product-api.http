@@ -5,10 +5,15 @@ Content-Type: application/json
 Accept: application/json
 
 {
-  "deviceName": "Device 1",
-  "partNumber": "PN-101",
+  "deviceName": "Device 2",
+  "partNumber": "PN-102",
   "buildingName": "TRIL4",
-  "deviceType": "Router",
-  "numberOfShelfPositions": 6
+  "deviceType": "CISCO 420",
+  "numberOfShelfPositions": 7
 }
+
+
+GET {{host}}/api/devices
+Content-Type: application/json
+"Accept": application/json
 
