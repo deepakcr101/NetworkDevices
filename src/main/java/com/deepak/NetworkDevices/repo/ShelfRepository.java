@@ -37,8 +37,8 @@ public class ShelfRepository {
     public Optional<Record> getShelf(String shelfId, String database) {
         String cypher = """
       MATCH (s:Shelf {shelfId:$shelfId}) WHERE s.isDeleted=false
-      OPTIONAL MATCH (p:ShelfPosition)-[:PLACED_ON]->(s)
-      OPTIONAL MATCH (d:Device)-[:HAS_POS]->(p)
+      OPTIONAL MATCH (p:ShelfPosition)-[:HAS]->(s)
+      OPTIONAL MATCH (d:Device)-[:HAS]->(p)
       RETURN s, d, p
       """;
         try (var session = driver.session(SessionConfig.forDatabase(database))) {
@@ -65,7 +65,7 @@ public class ShelfRepository {
       MATCH (s:Shelf {shelfId:$shelfId}) WHERE s.isDeleted=false
       SET s.isDeleted=true, s.updatedAt=datetime()
       WITH s
-      OPTIONAL MATCH (p:ShelfPosition)-[r:PLACED_ON]->(s)
+      OPTIONAL MATCH (p:ShelfPosition)-[r:HAS]->(s)
       DELETE r
       SET p.isOccupied=false, p.shelfId=null, p.updatedAt=datetime()
       RETURN s.shelfId AS shelfId
@@ -78,8 +78,8 @@ public class ShelfRepository {
     public List<Record> listShelvesWithStatus(int skip, int limit, boolean includeDeleted, String database) {
         String cypher = """
       MATCH (s:Shelf) WHERE ($includeDeleted=true OR s.isDeleted=false)
-      OPTIONAL MATCH (p:ShelfPosition)-[:PLACED_ON]->(s)
-      OPTIONAL MATCH (d:Device)-[:HAS_POS]->(p)
+      OPTIONAL MATCH (p:ShelfPosition)-[:HAS]->(s)
+      OPTIONAL MATCH (d:Device)-[:HAS]->(p)
       RETURN s,
              CASE WHEN p IS NULL THEN "Unallocated" ELSE d.deviceName + ":" + toString(p.index) END AS status
       ORDER BY s.shelfName

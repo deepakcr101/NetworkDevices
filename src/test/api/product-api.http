@@ -1,19 +1,13 @@
 
 @host = http://localhost:8080
-POST{{host}}/api/devices
+POST{{host}}/api/v1/devices
 Content-Type: application/json
 Accept: application/json
 
 {
-  "deviceName": "Device 2",
-  "partNumber": "PN-102",
-  "buildingName": "TRIL4",
-  "deviceType": "CISCO 420",
-  "numberOfShelfPositions": 7
+  "deviceName": "NYC-Core-R1",
+  "deviceType": "8180 Coherent Aggregation Router",
+  "partNumber": "170-8180-900",
+  "buildingName": "New York City POP",
+  "numberOfShelfPositions": 4
 }
-
-
-GET {{host}}/api/devices
-Content-Type: application/json
-"Accept": application/json
-

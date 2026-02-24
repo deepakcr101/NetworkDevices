@@ -37,7 +37,7 @@ public class DeviceServiceImpl implements DeviceService {
 
     @Override
     public DeviceSummaryResponse getDeviceSummary(String deviceId) {
-        var rec = repo.getDeviceSummary(deviceId, database)
+        var rec = repo.getDeviceSummary(deviceId)
                 .orElseThrow(() -> new NotFoundException("Device not found: " + deviceId));
         var d = rec.get("d").asNode();
         var positions = rec.get("positions").asList(v -> {

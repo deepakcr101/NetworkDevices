@@ -8,19 +8,18 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class Neo4jConfig {
+    @Value("${neo4j.uri}")
+    private String uri;
 
+    @Value("${neo4j.username}")
+    private String username;
 
-    @Bean
-    public Driver driver(
-            @Value("${neo4j.uri}") String uri,
-            @Value("${neo4j.username}") String user,
-            @Value("${neo4j.password}") String pwd) {
-        return GraphDatabase.driver(uri, AuthTokens.basic(user, pwd),
-                Config.builder().withMaxConnectionPoolSize(50).build());
+    @Value("${neo4j.password}")
+    private String password;
+
+    @Bean(destroyMethod = "close")
+    public Driver neo4jDriver() {
+        return GraphDatabase.driver(uri, AuthTokens.basic(username, password));
     }
 
-//    @Bean
-//    public Clock clock() {
-//        return Clock.systemUTC();
-//    }
 }

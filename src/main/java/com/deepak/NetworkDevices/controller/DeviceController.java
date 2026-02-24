@@ -16,7 +16,7 @@ public class DeviceController {
     public DeviceController(DeviceService service) { this.service = service; }
 
     @GetMapping("/{deviceId}/summary")
-    public ResponseEntity<DeviceSummaryResponse> summary(@PathVariable String deviceId) {
+    public ResponseEntity<DeviceSummaryResponse> getSummary(@PathVariable String deviceId) {
         return ResponseEntity.ok(service.getDeviceSummary(deviceId));
     }
 
