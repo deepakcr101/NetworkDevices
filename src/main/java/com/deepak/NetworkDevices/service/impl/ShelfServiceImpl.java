@@ -36,8 +36,10 @@ public class ShelfServiceImpl implements ShelfService {
                 s.get("shelfId").asString(),
                 s.get("shelfName").asString(),
                 s.get("partName").asString(),
-                s.get("isDeleted").asBoolean(),
-                null, null
+                s.get("deviceId").asString(),
+                s.get("shelfPositionId").asString(),
+                s.get("status").asString(),
+                null,null
         );
     }
 
@@ -58,21 +60,36 @@ public class ShelfServiceImpl implements ShelfService {
     }
 
     @Override
-    public List<ShelfWithStatusDto> listShelvesWithStatus(int page, int size, boolean includeDeleted) {
-        int skip = page * size;
-        var rows = repo.listShelvesWithStatus(skip, size, includeDeleted, database);
-        List<ShelfWithStatusDto> list = new ArrayList<>();
+    public List<ShelfDto> listShelvesWithStatus() {
+        List<Record> rows = repo.listShelvesWithStatus(database);
+        List<ShelfDto> list = new ArrayList<>();
+
         for (Record r : rows) {
-            var s = r.get("s").asNode();
+            //System.out.println("RAW: " + r.get("shelfDto"));
+            // Get the projected map as a Neo4j Value
+            org.neo4j.driver.Value v = r.get("shelfDto");
+
+            // Convert the Neo4j MapValue into a plain Java Map<String, String>
+            Map<String, String> m = v.asMap(val -> val.isNull() ? null : val.asString());
+
             ShelfDto shelf = new ShelfDto(
-                    s.get("shelfId").asString(),
-                    s.get("shelfName").asString(),
-                    s.get("partName").asString(),
-                    s.get("isDeleted").asBoolean(),
-                    null, null
+                    m.get("shelfId"),
+                    m.get("shelfName"),
+                    m.get("partName"),
+                    m.get("deviceId"),
+                    m.get("shelfPositionId"),
+                    m.get("status"),
+                    null, // createdAt
+                    null  // updatedAt
             );
-            list.add(new ShelfWithStatusDto(shelf, r.get("status").asString()));
+
+            list.add(shelf);
         }
         return list;
+    }
+
+    @Override
+    public List<ShelfDto> listAvailableShelves() {
+        return new  ArrayList<ShelfDto>();
     }
 }

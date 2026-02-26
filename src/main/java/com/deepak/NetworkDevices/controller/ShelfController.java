@@ -5,6 +5,8 @@ import com.deepak.NetworkDevices.dto.response.ShelfDto;
 import com.deepak.NetworkDevices.dto.response.ShelfWithStatusDto;
 import com.deepak.NetworkDevices.service.ShelfService;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,12 +25,16 @@ public class ShelfController {
         return ResponseEntity.ok(service.getShelf(shelfId));
     }
 
-    @PostMapping
-    public ResponseEntity<String> create(@Valid @RequestBody CreateShelfRequest req) {
-        var id = service.createShelf(req);
-        return ResponseEntity.status(201).body(id);
-    }
 
+    @PostMapping
+    public ResponseEntity<ShelfDto> createShelf(@RequestBody CreateShelfRequest req) {
+        String id = service.createShelf(req);
+        ShelfDto dto = service.getShelf(id);
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(dto);
+    }
     @PatchMapping("/{shelfId}")
     public ResponseEntity<Void> update(@PathVariable String shelfId,
                                        @RequestBody UpdateShelfRequest req) {
@@ -42,11 +48,8 @@ public class ShelfController {
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/list-with-status")
-    public ResponseEntity<List<ShelfWithStatusDto>> list(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
-            @RequestParam(defaultValue = "false") boolean includeDeleted) {
-        return ResponseEntity.ok(service.listShelvesWithStatus(page, size, includeDeleted));
+    @GetMapping("/available")
+    public ResponseEntity<List<ShelfDto>> list() {
+        return ResponseEntity.ok(service.listShelvesWithStatus());
     }
 }

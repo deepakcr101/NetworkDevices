@@ -18,7 +18,7 @@ public class ShelfRepository {
 
     public String createShelf(String shelfName, String partName, String database) {
         String cypher = """
-      CREATE (s:Shelf {
+      MERGE (s:Shelf {
         shelfId: randomUUID(),
         shelfName: $shelfName,
         partName: $partName,
@@ -75,20 +75,37 @@ public class ShelfRepository {
         }
     }
 
-    public List<Record> listShelvesWithStatus(int skip, int limit, boolean includeDeleted, String database) {
+    public List<Record> listShelvesWithStatus(String database) {
         String cypher = """
-      MATCH (s:Shelf) WHERE ($includeDeleted=true OR s.isDeleted=false)
-      OPTIONAL MATCH (p:ShelfPosition)-[:HAS]->(s)
-      OPTIONAL MATCH (d:Device)-[:HAS]->(p)
-      RETURN s,
-             CASE WHEN p IS NULL THEN "Unallocated" ELSE d.deviceName + ":" + toString(p.index) END AS status
-      ORDER BY s.shelfName
-      SKIP $skip LIMIT $limit
+        MATCH (s:Shelf)
+       WHERE s.isDeleted = false
+
+       OPTIONAL MATCH (p:ShelfPosition)-[:HAS]->(s)
+       WHERE p.isDeleted = false
+
+       OPTIONAL MATCH (d:Device)-[:HAS]->(p)
+       WHERE d.isDeleted = false
+
+       WITH s, p, d,
+         CASE
+           WHEN d IS NULL OR p IS NULL THEN null
+           ELSE d.deviceName + " " + toString(p.index)
+         END AS statusLabel
+       ORDER BY s.shelfName ASC
+      
+      RETURN {
+        shelfId: toString(s.shelfId),
+        shelfName: toString(s.shelfName),
+        partName: toString(s.partName),
+        deviceId: CASE WHEN d IS NULL THEN null ELSE toString(d.deviceId) END,
+        shelfPositionId: CASE WHEN p IS NULL THEN null ELSE toString(p.shelfPositionId) END,
+        status: CASE WHEN statusLabel IS NULL THEN null ELSE toString(statusLabel) END,
+        createdAt: null,
+        updatedAt: null
+      } AS shelfDto
       """;
         try (var session = driver.session(SessionConfig.forDatabase(database))) {
-            return session.executeRead(tx -> tx.run(cypher, Map.of(
-                    "skip", skip, "limit", limit, "includeDeleted", includeDeleted
-            )).list());
+            return session.executeRead(tx -> tx.run(cypher).list());
         }
     }
 }

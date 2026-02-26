@@ -1,40 +1,4 @@
-HELP.md
-target/
-.mvn
-.mvn/wrapper/maven-wrapper.jar
-!**/src/main/**/target/
-!**/src/test/**/target/
-
-resources/
-application.properties
-
-### STS ###
-.apt_generated
-.classpath
-.factorypath
-.project
-.settings
-.springBeans
-.sts4-cache
-
-### IntelliJ IDEA ###
-.idea
-*.iws
-*.iml
-*.ipr
-
-### NetBeans ###
-/nbproject/private/
-/nbbuild/
-/dist/
-/nbdist/
-/.nb-gradle/
-build/
-!**/src/main/**/build/
-!**/src/test/**/build/
-
-### VS Code ###
-.vscode/
+# See https://docs.github.com/get-started/getting-started-with-git/ignoring-files for more about ignoring files.
 
 # Compiled output
 /dist
@@ -49,6 +13,8 @@ yarn-error.log
 
 # IDEs and editors
 .idea/
+.project
+.classpath
 .c9/
 *.launch
 .settings/
@@ -76,4 +42,3 @@ __screenshots__/
 # System files
 .DS_Store
 Thumbs.db
-

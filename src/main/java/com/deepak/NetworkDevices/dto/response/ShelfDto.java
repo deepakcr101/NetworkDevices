@@ -7,7 +7,9 @@ public record ShelfDto(
         String shelfId,
         String shelfName,
         String partName,
-        boolean isDeleted,
+        String deviceId,
+        String shelfPositionId,
+        String status,
         OffsetDateTime createdAt,
         OffsetDateTime updatedAt
 ) {}

@@ -1,11 +1,15 @@
 package com.deepak.NetworkDevices.controller;
 
 import com.deepak.NetworkDevices.dto.request.*;
+import com.deepak.NetworkDevices.dto.response.DeviceDto;
 import com.deepak.NetworkDevices.dto.response.DeviceSummaryResponse;
 import com.deepak.NetworkDevices.service.DeviceService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/v1/devices")
@@ -14,6 +18,15 @@ public class DeviceController {
     private final DeviceService service;
 
     public DeviceController(DeviceService service) { this.service = service; }
+
+    @GetMapping("/all")
+    public ResponseEntity<List<DeviceDto>> getAllDevices() {
+        // 1. If service.getDevices() returns an empty list,
+        //    this returns 200 OK with [] (Correct REST behavior).
+        // 2. Passing null to .ok() still returns 200, so ensure your service
+        //    returns Collections.emptyList() instead of null.
+        return ResponseEntity.ok(service.getDevices());
+    }
 
     @GetMapping("/{deviceId}/summary")
     public ResponseEntity<DeviceSummaryResponse> getSummary(@PathVariable String deviceId) {

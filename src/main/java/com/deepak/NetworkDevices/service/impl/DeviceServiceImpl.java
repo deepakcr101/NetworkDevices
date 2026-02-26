@@ -24,6 +24,10 @@ public class DeviceServiceImpl implements DeviceService {
     }
 
     @Override
+    public List<DeviceDto> getDevices() {
+        return repo.getDevices();
+    }
+    @Override
     public String createDevice(CreateDeviceRequest req) {
         Map<String,Object> params = new HashMap<>();
         params.put("deviceName", req.deviceName());
@@ -62,7 +66,6 @@ public class DeviceServiceImpl implements DeviceService {
                 d.get("partNumber").asString(),
                 d.get("buildingName").asString(),
                 d.get("numberOfShelfPositions").asInt(),
-                d.get("isDeleted").asBoolean(),
                 null, null
         );
         return new DeviceSummaryResponse(device, positions);

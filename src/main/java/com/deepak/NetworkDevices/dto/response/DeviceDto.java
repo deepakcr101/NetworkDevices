@@ -9,7 +9,6 @@ public record DeviceDto(
         String partNumber,
         String buildingName,
         int numberOfShelfPositions,
-        boolean isDeleted,
         OffsetDateTime createdAt,
         OffsetDateTime updatedAt
 ) {}

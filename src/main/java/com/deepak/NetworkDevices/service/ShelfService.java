@@ -12,5 +12,6 @@ public interface ShelfService {
     ShelfDto getShelf(String shelfId);
     void updateShelf(String shelfId, UpdateShelfRequest req);
     void softDeleteShelf(String shelfId);
-    List<ShelfWithStatusDto> listShelvesWithStatus(int page, int size, boolean includeDeleted);
+    List<ShelfDto> listShelvesWithStatus();
+    List<ShelfDto> listAvailableShelves();
 }

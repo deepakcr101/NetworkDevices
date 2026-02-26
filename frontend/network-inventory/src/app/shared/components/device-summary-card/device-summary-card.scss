@@ -1,0 +1,15 @@
+:host { display: block; min-width: 600px; }
+h2, h3 { margin: 0 0 0.5rem 0; }
+.summary-header { border-bottom: 1px solid #eee; padding-bottom: 1rem; margin-bottom: 1rem; }
+.summary-header p { margin: 0; color: #555; }
+.positions-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 1rem; list-style: none; padding: 0; }
+.position-card { border: 1px solid #ccc; border-radius: 4px; padding: 1rem; }
+.position-card.occupied { border-left: 4px solid #ffa726; /* Orange for occupied */ }
+.position-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; }
+.status-badge { padding: 0.2rem 0.5rem; border-radius: 12px; font-size: 0.8rem; font-weight: bold; }
+.status-badge.OCCUPIED { background-color: #ffe0b2; color: #e65100; }
+.status-badge.FREE { background-color: #c8e6c9; color: #1b5e20; }
+.shelf-details { min-height: 60px; /* Keep height consistent */ }
+.shelf-details p { margin: 0.25rem 0; font-size: 0.9rem; }
+.shelf-details.empty p { color: #777; font-style: italic; }
+button { margin-top: 0.5rem; }
