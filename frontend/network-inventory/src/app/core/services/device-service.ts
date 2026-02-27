@@ -29,6 +29,10 @@ export class DeviceService {
         positions: data.positions.toSorted((a, b) => a.index - b.index)
       }))
     );*/
+  
+  deleteDevice(deviceId: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${deviceId}`);
+  }
 
   createDevice(deviceData: Omit<Device, 'id' | 'shelfPositions'>): Observable<Device> {
     return this.http.post<Device>(this.apiUrl, deviceData);

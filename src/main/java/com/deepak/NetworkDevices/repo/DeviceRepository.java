@@ -13,7 +13,7 @@ public class DeviceRepository {
 
     public DeviceRepository(Driver driver) { this.driver = driver; }
 
-    public String createDevice(Map<String,Object> params) {
+    public Value createDevice(Map<String,Object> params) {
         String cypher = """
       WITH randomUUID() AS dId
       MERGE (d:Device {
@@ -46,7 +46,7 @@ public class DeviceRepository {
             return session.executeWrite(tx ->{
                 Result result=tx.run(cypher, params);
                 Record record=result.single();
-                return record.get("deviceId").toString();
+                return record.get("deviceId");
             });
 
         }

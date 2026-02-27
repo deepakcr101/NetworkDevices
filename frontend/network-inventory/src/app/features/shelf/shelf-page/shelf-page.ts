@@ -12,60 +12,7 @@ interface State {
 
 @Component({
   selector: 'app-shelf-page',
-  template: `
-    <header class="page-header">
-      <h1>Shelf Management</h1>
-      <button class="button-primary" (click)="openCreateShelfForm()">Create Shelf</button>
-    </header>
-
-    <main>
-      <h2>Available Shelves</h2>
-      @switch (state().status) {
-        @case ('loading') {
-          <p aria-live="polite">Loading shelves...</p>
-        }
-        @case ('loaded') {
-          @if (state().shelves.length > 0) {
-            <table>
-              <thead>
-                <tr>
-                  <th>Shelf Name</th>
-                  <!-- //<th>Type</th> -->
-                  <th>Part Name</th>
-                  <th>Device Name</th>
-                  <th>Shelf Position ID</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                @for (shelf of state().shelves; track shelf.shelfid) {
-                  <tr>
-                    <td>{{ state().shelves.indexOf(shelf) + 1 }}</td>
-                    <td>{{ shelf.shelfName }}</td>
-                    
-                    <td>{{ shelf.partName }}</td>
-                    <td>{{ shelf.deviceId }}</td>
-                    <td>{{shelf.shelfPositionId}}</td>
-                    <td>
-                      <button (click)="openEditShelfForm(shelf)">Edit</button>
-                      <button (click)="deleteShelf(shelf.shelfid)">Delete</button>
-                    </td>
-                  </tr>
-                }
-              </tbody>
-            </table>
-          } @else {
-            <p>No shelves found. Create one to get started!</p>
-          }
-        }
-        @case ('error') {
-          <p role="alert" class="error-message">
-            Failed to load shelves. Please try again later. ({{ state().error }})
-          </p>
-        }
-      }
-    </main>
-  `,
+  templateUrl: './shelf-page.html',
   styleUrls: ['./shelf-page.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -85,28 +32,53 @@ private readonly shelfApi = inject(ShelfService);
 
   loadShelves(): void {
     this.state.set({ shelves: [], status: 'loading', error: null });
-    this.shelfApi.getAvailableShelves().subscribe({
+    this.shelfApi.getShelves().subscribe({
       next: (shelves) => this.state.update(s => ({ ...s, shelves, status: 'loaded' })),
       error: (err) => this.state.update(s => ({ ...s, status: 'error', error: err.message })),
     });
   }
 
+  
   openCreateShelfForm(): void {
-    this.dialogService.open(ShelfForm, { mode: 'create' });
+    // The dialog returns an observable that we can subscribe to.
+    const dialogRef = this.dialogService.open(ShelfForm, { mode: 'create' });
+
+    dialogRef.subscribe(result => {
+      // If the dialog was closed with a 'success' message, reload the shelf list.
+      if (result === 'success') {
+        this.loadShelves();
+      }
+    });
   }
 
+  
   openEditShelfForm(shelf: Shelf): void {
-    this.dialogService.open(ShelfForm, { mode: 'edit', shelf });
+    const dialogRef = this.dialogService.open(ShelfForm, { mode: 'edit', shelf });
+
+    dialogRef.subscribe(result => {
+      // If the dialog was closed with a 'success' message, reload the shelf list.
+      if (result === 'success') {
+        this.loadShelves();
+      }
+    });
   }
 
+  
   deleteShelf(shelfId: string): void {
-    if (!confirm('Are you sure you want to delete this shelf?')) {
+    if (!confirm('Are you sure you want to delete this shelf? This action cannot be undone.')) {
       return;
     }
 
     this.shelfApi.deleteShelf(shelfId).subscribe({
-      next: () => this.loadShelves(), // Reload shelves after deletion
-      error: (err) => alert(`Error deleting shelf: ${err.message}`),
+      next: () => {
+        alert('Shelf deleted successfully!');
+        // Add this line to refresh the data from the server.
+        this.loadShelves();
+      },
+      error: (err) => {
+        console.error('Failed to delete shelf:', err);
+        alert(`Error deleting shelf: ${err.message}`);
+      },
     });
   }
 }

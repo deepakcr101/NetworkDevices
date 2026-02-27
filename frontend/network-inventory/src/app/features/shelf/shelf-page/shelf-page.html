@@ -1,1 +1,53 @@
-<p>shelf-page works!</p>
+<header class="page-header">
+      <h1>Shelf Management</h1>
+      <button class="button-primary" (click)="openCreateShelfForm()">Create Shelf</button>
+    </header>
+
+    <main>
+      <h2>Available Shelves</h2>
+      @switch (state().status) {
+        @case ('loading') {
+          <p aria-live="polite">Loading shelves...</p>
+        }
+        @case ('loaded') {
+          @if (state().shelves.length > 0) {
+            <table>
+              <thead>
+                <tr>
+                  <th>Serial Number</th>
+                  <th>Shelf Name</th>
+                  <!-- //<th>Type</th> -->
+                  <th>Part Name</th>
+                  <th>Status:DeviceName SP Index</th>
+                  <!-- <th>Shelf Position ID</th> -->
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (shelf of state().shelves; track shelf.shelfId) {
+                  <tr>
+                    <td>{{ state().shelves.indexOf(shelf) + 1 }}</td>
+                    <td>{{ shelf.shelfName }}</td>
+                    
+                    <td>{{ shelf.partName }}</td>
+                    <td>{{ shelf.status }}</td>
+                    <!-- <td>{{shelf.shelfPositionId}}</td> -->
+                    <td>
+                      <button (click)="openEditShelfForm(shelf)">Edit</button>
+                      <button (click)="deleteShelf(shelf.shelfId)">Delete</button>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          } @else {
+            <p>No shelves found. Create one to get started!</p>
+          }
+        }
+        @case ('error') {
+          <p role="alert" class="error-message">
+            Failed to load shelves. Please try again later. ({{ state().error }})
+          </p>
+        }
+      }
+    </main>

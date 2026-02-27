@@ -27,6 +27,7 @@ public class DeviceServiceImpl implements DeviceService {
     public List<DeviceDto> getDevices() {
         return repo.getDevices();
     }
+
     @Override
     public String createDevice(CreateDeviceRequest req) {
         Map<String,Object> params = new HashMap<>();
@@ -36,7 +37,7 @@ public class DeviceServiceImpl implements DeviceService {
         params.put("buildingName", req.buildingName());
         params.put("numSP", req.numberOfShelfPositions());
         params.put("database", database);
-        return repo.createDevice(params);
+        return repo.createDevice(params).asString();
     }
 
     @Override

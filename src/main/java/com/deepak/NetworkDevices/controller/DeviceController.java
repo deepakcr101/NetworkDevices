@@ -5,11 +5,11 @@ import com.deepak.NetworkDevices.dto.response.DeviceDto;
 import com.deepak.NetworkDevices.dto.response.DeviceSummaryResponse;
 import com.deepak.NetworkDevices.service.DeviceService;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/v1/devices")
@@ -35,8 +35,8 @@ public class DeviceController {
 
     @PostMapping
     public ResponseEntity<String> create(@Valid @RequestBody CreateDeviceRequest req) {
-        var id = service.createDevice(req);
-        return ResponseEntity.status(201).body(id);
+        String id = service.createDevice(req);
+        return ResponseEntity.status(HttpStatus.CREATED).body(id);
     }
 
     @PatchMapping("/{deviceId}")
@@ -52,7 +52,7 @@ public class DeviceController {
         return ResponseEntity.noContent().build();
     }
 
-    @PostMapping("/{deviceId}/positions/{shelfPositionId}:allocate")
+    @PostMapping("/{deviceId}/shelf-positions/{shelfPositionId}:allocate")
     public ResponseEntity<Void> allocate(@PathVariable String deviceId,
                                          @PathVariable String shelfPositionId,
                                          @Valid @RequestBody AllocateRequest req) {
@@ -60,7 +60,7 @@ public class DeviceController {
         return ResponseEntity.ok().build();
     }
 
-    @PostMapping("/{deviceId}/positions/{shelfPositionId}:free")
+    @PostMapping("/{deviceId}/shelf-positions/{shelfPositionId}:free")
     public ResponseEntity<Void> free(@PathVariable String deviceId,
                                      @PathVariable String shelfPositionId) {
         service.free(deviceId, shelfPositionId);

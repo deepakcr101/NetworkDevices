@@ -2,6 +2,7 @@ package com.deepak.NetworkDevices.controller;
 
 import com.deepak.NetworkDevices.dto.request.*;
 import com.deepak.NetworkDevices.dto.response.ShelfDto;
+import com.deepak.NetworkDevices.dto.response.ShelfLiteDto;
 import com.deepak.NetworkDevices.dto.response.ShelfWithStatusDto;
 import com.deepak.NetworkDevices.service.ShelfService;
 import jakarta.validation.Valid;
@@ -20,9 +21,9 @@ public class ShelfController {
 
     public ShelfController(ShelfService service) { this.service = service; }
 
-    @GetMapping("/{shelfId}")
-    public ResponseEntity<ShelfDto> get(@PathVariable String shelfId) {
-        return ResponseEntity.ok(service.getShelf(shelfId));
+    @GetMapping
+    public ResponseEntity<List<ShelfDto>> get() {
+        return ResponseEntity.ok(service.listShelvesWithStatus());
     }
 
 
@@ -48,8 +49,9 @@ public class ShelfController {
         return ResponseEntity.noContent().build();
     }
 
+
     @GetMapping("/available")
-    public ResponseEntity<List<ShelfDto>> list() {
-        return ResponseEntity.ok(service.listShelvesWithStatus());
+    public ResponseEntity<List<ShelfLiteDto>> list() {
+        return ResponseEntity.ok(service.listAvailableShelves());
     }
 }

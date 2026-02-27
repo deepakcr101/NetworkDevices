@@ -4,6 +4,7 @@ import { Device } from '../../../core/models/device';
 import { DeviceService } from '../../../core/services/device-service';
 import { DeviceSummaryCard } from '../../../shared/components/device-summary-card/device-summary-card';
 import { DialogService } from '../../../shared/services/dialog';
+import { DeviceForm } from '../../../shared/components/device-form/device-form';
 
 interface State {
   devices: Device[];
@@ -53,8 +54,10 @@ interface State {
                       <td>{{ device.buildingName }}</td>
                       <td>{{ device.numberOfShelfPositions }}</td>
                       <td>
-                        <button (click)="openDeviceCard(device)">View Summary</button>
-                      </td>
+  <button (click)="openDeviceCard(device)">View Summary</button>
+  <button (click)="openEditDeviceForm(device)">Edit</button>
+  <button (click)="deleteDevice(device.deviceId)">Delete</button>
+</td>
                     </tr>
                   }
                 </tbody>
@@ -77,7 +80,7 @@ interface State {
   imports: [TitleCasePipe] // Import pipes directly into standalone components
 })
 export class HomePage {
-private readonly deviceService = inject(DeviceService);
+  private readonly deviceService = inject(DeviceService);
   private readonly dialogService = inject(DialogService);
 
   readonly state = signal<State>({
@@ -98,23 +101,43 @@ private readonly deviceService = inject(DeviceService);
     });
   }
 
-  
-openDeviceCard(device: Device): void {
-  console.log('Opening summary for:', device.deviceName);
 
-  this.deviceService.getDeviceSummary(device.deviceId).subscribe({
-    next: (summary) => {
-      // Pass the raw summary directly
-      this.dialogService.open(DeviceSummaryCard, summary);
-    },
-    error: (err) => {
-      console.error('Failed to retrieve device summary:', err);
-      alert(`Error retrieving device summary: ${err.message}`);
+  openDeviceCard(device: Device): void {
+    console.log('Opening summary for:', device.deviceName);
+
+    this.deviceService.getDeviceSummary(device.deviceId).subscribe({
+      next: (summary) => {
+        // Pass the raw summary directly
+        this.dialogService.open(DeviceSummaryCard, summary);
+      },
+      error: (err) => {
+        console.error('Failed to retrieve device summary:', err);
+        alert(`Error retrieving device summary: ${err.message}`);
+      }
+    });
+  }
+
+  deleteDevice(deviceId: string): void {
+    if (!confirm('Are you sure you want to delete this device?')) {
+      return;
     }
-  });
-}
 
+    this.deviceService.deleteDevice(deviceId).subscribe({
+      next: () => {
+        // Refresh the device list after deletion
+        this.loadDevices();
+        alert('Device deleted successfully!');
+      },
+      error: (err: { message: any; }) => {
+        console.error('Failed to delete device:', err);
+        alert(`Error: ${err.message}`);
+      },
+    });
+  }
 
+  openEditDeviceForm(device: Device): void {
+    this.dialogService.open(DeviceForm, { mode: 'edit', device });
+  }
   openCreateDeviceForm(): void {
     console.log('Opening create device form...');
     // Logic to open DeviceForm in a dialog will be added here.

@@ -1,6 +1,6 @@
 // src/app/core/models/shelf.model.ts
 export interface Shelf {
-  shelfid: string;
+  shelfId: string;
   shelfName: string;
   
   partName: string;

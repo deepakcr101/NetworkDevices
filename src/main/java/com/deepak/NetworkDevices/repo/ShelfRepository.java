@@ -108,4 +108,19 @@ public class ShelfRepository {
             return session.executeRead(tx -> tx.run(cypher).list());
         }
     }
+
+    public List<Record> listAvailableShelves(String database) {
+        String cypher = """
+        MATCH (s:Shelf)
+        WHERE s.isDeleted = false AND NOT (:ShelfPosition)-[:HAS]->(s)
+       RETURN {
+         shelfId: toString(s.shelfId),
+         shelfName: toString(s.shelfName),
+         partName: toString(s.partName)
+       } AS shelfDto
+      """;
+        try (var session = driver.session(SessionConfig.forDatabase(database))) {
+            return session.executeRead(tx -> tx.run(cypher).list());
+        }
+    }
 }

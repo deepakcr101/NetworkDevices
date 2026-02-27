@@ -59,16 +59,27 @@ export class DeviceSummaryCard {
   readonly summary = signal<DeviceSummary>(this.initialSummary);
 
   freeShelfPosition(deviceId: string, shelfPositionId: string): void {
-    if (!confirm('Are you sure you want to free this shelf position?')) return;
+    if (!confirm('Are you sure you want to free this shelf position?')) {
+      return;
+    }
 
-    // Prefer the API to return DeviceSummary
     this.deviceService.freeShelfPosition(deviceId, shelfPositionId).subscribe({
-      next: (updatedSummary: DeviceSummary) => {
-        this.summary.set(updatedSummary);
+      next: () => {
+        // Update the local state to reflect the freed shelf position
+        const updatedPositions = this.summary().positions.map(position => 
+            position.shelfPositionId === shelfPositionId
+              ? { ...position, isOccupied: false, shelf: undefined }
+              : position
+          );
+        this.summary.update(state => ({
+          ...state,
+          positions: updatedPositions,
+        }));
+        alert('Shelf position freed successfully!');
       },
-      error: (err) => {
-        console.error('Failed to free shelf position', err);
-        alert(`Error: ${err?.message ?? 'Unknown error'}`);
+      error: (err: { message: any; }) => {
+        console.error('Failed to free shelf position:', err);
+        alert(`Error: ${err.message}`);
       },
     });
   }

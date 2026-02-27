@@ -9,6 +9,7 @@ import {
   Type,
 } from '@angular/core';
 import { DOCUMENT } from '@angular/common';
+import { Subject, Observable } from 'rxjs'; 
 import { Dialog } from '../components/dialog/dialog';
 import { DIALOG_DATA } from './dialog.config';
 
@@ -21,56 +22,57 @@ export class DialogService {
   private dialogComponentRef?: ComponentRef<Dialog>;
   private contentComponentRef?: any; // ComponentRef<unknown>
   private previouslyFocusedElement?: HTMLElement;
-
-  open<T>(componentType: Type<T>, data?: any): void {
-    // 0) Store focused element
+   private result$?: Subject<any>;
+   
+  open<T>(componentType: Type<T>, data?: any): Observable<any> {
     this.previouslyFocusedElement = this.document.activeElement as HTMLElement;
 
-    // 1) Injector that provides the raw payload to DIALOG_DATA
+    // Create a new Subject for each dialog instance
+    this.result$ = new Subject<any>();
+
     const dialogInjector = Injector.create({
       providers: [{ provide: DIALOG_DATA, useValue: data }],
       parent: this.injector,
     });
 
-    // 2) Create the content component (e.g., DeviceSummaryCard)
-    this.contentComponentRef = createComponent(componentType, {
+    const contentComponentRef = createComponent(componentType, {
       environmentInjector: this.injector,
       elementInjector: dialogInjector,
     });
 
-    // 3) Create the dialog wrapper and project content inside
     this.dialogComponentRef = createComponent(Dialog, {
       environmentInjector: this.injector,
-      projectableNodes: [[this.contentComponentRef.location.nativeElement]],
+      projectableNodes: [[contentComponentRef.location.nativeElement]],
     });
 
-    // 4) Close subscription
     this.dialogComponentRef.instance.close.subscribe(() => this.close());
 
-    // 5) Attach both views
-    this.appRef.attachView(this.contentComponentRef.hostView);
+    this.appRef.attachView(contentComponentRef.hostView);
     this.appRef.attachView(this.dialogComponentRef.hostView);
 
-    // 6) Append to body
     this.document.body.appendChild(this.dialogComponentRef.location.nativeElement);
+    
+    // ### CHANGE 2: Return the Subject as an Observable ###
+    return this.result$.asObservable();
   }
 
-  close(): void {
-    if (!this.dialogComponentRef) return;
-
-    // Detach and destroy content component
-    if (this.contentComponentRef) {
-      this.appRef.detachView(this.contentComponentRef.hostView);
-      this.contentComponentRef.destroy();
-      this.contentComponentRef = undefined;
+  // ### CHANGE 3: Update the `close` method to accept a result ###
+  close(result?: any): void {
+    if (!this.dialogComponentRef) {
+      return;
     }
 
-    // Detach and destroy dialog wrapper
     this.appRef.detachView(this.dialogComponentRef.hostView);
     this.dialogComponentRef.destroy();
     this.dialogComponentRef = undefined;
 
-    // Restore focus
     this.previouslyFocusedElement?.focus();
+
+    // ### CHANGE 4: Emit the result and complete the Subject ###
+    if (this.result$) {
+      this.result$.next(result);
+      this.result$.complete();
+      this.result$ = undefined;
+    }
   }
 }
