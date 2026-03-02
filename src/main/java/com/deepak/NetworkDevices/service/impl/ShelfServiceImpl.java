@@ -90,7 +90,7 @@ public class ShelfServiceImpl implements ShelfService {
 
     @Override
     public List<ShelfLiteDto> listAvailableShelves() {
-        List<Record> rows = repo.listShelvesWithStatus(database);
+        List<Record> rows = repo.listAvailableShelves(database);
         List<ShelfLiteDto> list = new ArrayList<>();
 
         for (Record r : rows) {

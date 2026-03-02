@@ -29,19 +29,19 @@ public class DeviceRepository {
       })
       WITH d
       UNWIND range(1, $numSP) AS idx
-      CREATE (p:ShelfPosition {
+    CREATE (p:ShelfPosition {
         shelfPositionId: randomUUID(),
         index: idx,
         deviceId: d.deviceId,
-        shelfId: null,
         isOccupied: false,
         isDeleted: false,
         createdAt: datetime(),
         updatedAt: datetime()
       })
       CREATE (d)-[:HAS]->(p)
+      WITH d
       RETURN d.deviceId AS deviceId LIMIT 1
-      """;
+    """;
         try (Session session = driver.session()) {
             return session.executeWrite(tx ->{
                 Result result=tx.run(cypher, params);

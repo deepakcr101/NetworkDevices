@@ -1,91 +1,64 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import { DeviceSummary } from '../../../core/models/device';
-import { DIALOG_DATA } from '../../../shared/services/dialog.config';
+// src/app/shared/components/device-summary-card/device-summary-card.ts
+import { ChangeDetectionStrategy, Component, inject, signal, effect } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 import { DeviceService } from '../../../core/services/device-service';
+import { DialogService } from '../../../shared/services/dialog';
+import { DeviceSummary } from '../../../core/models/device';
+import { AllocateShelfDialog } from '../allocate-shelf-dialog/allocate-shelf-dialog';
 
 @Component({
   selector: 'app-device-summary-card',
-  template: `
-    @if (summary(); as s) {
-      <div class="summary-header">
-        <h2 id="dialog-title">{{ s.device.deviceName }}</h2>
-        <p>
-          {{ s.device.deviceType }} | {{ s.device.partNumber }} | {{ s.device.buildingName }}
-        </p>
-      </div>
-
-      <div class="shelf-positions">
-        <h3>Shelf Positions ({{ s.device.numberOfShelfPositions }})</h3>
-        <ul class="positions-grid">
-          @for (sp of s.positions; track sp.shelfPositionId) {
-            <li class="position-card" [class.occupied]="sp.isOccupied">
-              <div class="position-header">
-                <strong>Index {{ sp.index }}</strong>
-                <span class="status-badge" [class.occupied]="sp.isOccupied" [class.free]="!sp.isOccupied">
-                  {{ sp.isOccupied ? 'OCCUPIED' : 'FREE' }}
-                </span>
-              </div>
-
-              @if (sp.isOccupied && sp.shelf) {
-                <div class="shelf-details">
-                  <p><strong>Shelf:</strong> {{ sp.shelf.shelfName }}</p>
-                  <p><strong>Part #:</strong> {{ sp.shelf.partName }}</p>
-                </div>
-                <button (click)="freeShelfPosition(s.device.deviceId, sp.shelfPositionId)">
-                  Free Position
-                </button>
-              } @else {
-                <div class="shelf-details empty"><p>Empty</p></div>
-                <button (click)="addShelf(sp.shelfPositionId)">Add Shelf</button>
-              }
-            </li>
-          }
-        </ul>
-      </div>
-    } @else {
-      <p>Loading device details...</p>
-    }
-  `,
+  templateUrl: './device-summary-card.html',
   styleUrls: ['./device-summary-card.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DeviceSummaryCard {
+  private readonly route = inject(ActivatedRoute);
   private readonly deviceService = inject(DeviceService);
+  private readonly dialogService = inject(DialogService);
 
-  // Receive the raw summary injected by DialogService (Option A)
-  private readonly initialSummary: DeviceSummary = inject(DIALOG_DATA) as DeviceSummary;
+  // Read deviceId from route (string). Using a signal is fine; read with this.deviceId()
+  readonly deviceId = signal<string>(this.route.snapshot.paramMap.get('deviceId')!);
 
-  // Component state: full summary
-  readonly summary = signal<DeviceSummary>(this.initialSummary);
+  readonly summary = signal<DeviceSummary | null>(null);
+  readonly loading = signal<boolean>(true);
+  readonly error = signal<string | null>(null);
 
-  freeShelfPosition(deviceId: string, shelfPositionId: string): void {
-    if (!confirm('Are you sure you want to free this shelf position?')) {
-      return;
-    }
+  // Load summary whenever deviceId changes
+  private readonly load = effect(() => {
+    const id = this.deviceId();
+    if (!id) return;
 
-    this.deviceService.freeShelfPosition(deviceId, shelfPositionId).subscribe({
-      next: () => {
-        // Update the local state to reflect the freed shelf position
-        const updatedPositions = this.summary().positions.map(position => 
-            position.shelfPositionId === shelfPositionId
-              ? { ...position, isOccupied: false, shelf: undefined }
-              : position
-          );
-        this.summary.update(state => ({
-          ...state,
-          positions: updatedPositions,
-        }));
-        alert('Shelf position freed successfully!');
-      },
-      error: (err: { message: any; }) => {
-        console.error('Failed to free shelf position:', err);
-        alert(`Error: ${err.message}`);
-      },
+    this.loading.set(true);
+    this.error.set(null);
+
+    this.deviceService.getDeviceSummary(id).subscribe({
+      next: (s) => { this.summary.set(s); this.loading.set(false); },
+      error: (err) => { this.error.set(err?.error || err?.message || 'Failed to load summary'); this.loading.set(false); },
+    });
+  });
+
+  
+  addShelf(deviceId: string, shelfPositionId: string): void {
+    const dialogRef = this.dialogService.open(AllocateShelfDialog, { deviceId, shelfPositionId });
+    dialogRef.subscribe((result) => {
+      if (result === 'success') this.reloadSummary(deviceId);
     });
   }
 
-  addShelf(shelfPositionId: string): void {
-    console.log(`TODO: Implement 'Add Shelf' flow for shelf position ${shelfPositionId}`);
-    alert('"Add Shelf" functionality is not yet implemented.');
+  
+  freeShelfPosition(deviceId: string, shelfPositionId: string): void {
+    if (!confirm('Are you sure you want to free this shelf position?')) return;
+    this.deviceService.freeShelfPosition(deviceId, shelfPositionId).subscribe({
+      next: () => { alert('Shelf position freed successfully!'); this.reloadSummary(deviceId); },
+      error: (err) => alert(`Error: ${err.message}`),
+    });
+  }
+
+  private reloadSummary(deviceId: string): void {
+    this.deviceService.getDeviceSummary(deviceId).subscribe({
+      next: (s) => this.summary.set(s),
+      error: (err) => alert(`Failed to refresh summary: ${err.message}`),
+    });
   }
 }

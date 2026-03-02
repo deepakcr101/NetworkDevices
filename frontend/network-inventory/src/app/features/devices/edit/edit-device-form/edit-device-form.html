@@ -1,0 +1,81 @@
+<form (submit)="onSubmit($event)" novalidate>
+  <h3>Edit Device</h3>
+
+  <!-- Device Name -->
+  <div>
+    <label>
+      <input
+        type="checkbox"
+        [checked]="enable.deviceName()"
+        (change)="enable.deviceName.set($any($event.target).checked)"
+      />
+      Edit Device Name
+    </label>
+
+    <input
+      type="text"
+      [value]="model().deviceName"
+      [disabled]="!enable.deviceName()"
+      (input)="model.set({ ...model(), deviceName: $any($event.target).value })"
+    />
+  </div>
+
+  <!-- Device Type -->
+  <div>
+    <label>
+      <input
+        type="checkbox"
+        [checked]="enable.deviceType()"
+        (change)="enable.deviceType.set($any($event.target).checked)"
+      />
+      Edit Device Type
+    </label>
+
+    <input
+      type="text"
+      [value]="model().deviceType"
+      [disabled]="!enable.deviceType()"
+      (input)="model.set({ ...model(), deviceType: $any($event.target).value })"
+    />
+  </div>
+
+  <!-- Part Number -->
+  <div>
+    <label>
+      <input
+        type="checkbox"
+        [checked]="enable.partNumber()"
+        (change)="enable.partNumber.set($any($event.target).checked)"
+      />
+      Edit Part Number
+    </label>
+
+    <input
+      type="text"
+      [value]="model().partNumber"
+      [disabled]="!enable.partNumber()"
+      (input)="model.set({ ...model(), partNumber: $any($event.target).value })"
+    />
+  </div>
+
+  <!-- Building Name -->
+  <div>
+    <label>
+      <input
+        type="checkbox"
+        [checked]="enable.buildingName()"
+        (change)="enable.buildingName.set($any($event.target).checked)"
+      />
+      Edit Building Name
+    </label>
+
+    <input
+      type="text"
+      [value]="model().buildingName"
+      [disabled]="!enable.buildingName()"
+      (input)="model.set({ ...model(), buildingName: $any($event.target).value })"
+    />
+  </div>
+
+  <button type="submit">Save Changes</button>
+</form>

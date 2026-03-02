@@ -1,0 +1,25 @@
+<header class="dialog-header">
+  <h2 id="dialog-title">Allocate Shelf</h2>
+  <button class="button-primary" (click)="openCreateAndAllocateShelf()">Create New Shelf</button>
+</header>
+
+<main>
+  @switch(state().status) {
+    @case('loading') { <p>Loading available shelves...</p> }
+    @case('error') { <p class="error-text">Could not load shelves.</p> }
+    @case('loaded') {
+      @if (state().shelves.length > 0) {
+        <ul class="shelf-list">
+          @for (shelf of state().shelves; track shelf.shelfId) {
+            <li class="shelf-item">
+              <span>{{ shelf.shelfName }} ({{ shelf.partName }})</span>
+              <button (click)="allocateShelf(shelf.shelfId)">Select</button>
+            </li>
+          }
+        </ul>
+      } @else {
+        <p>No available shelves found. Please create one.</p>
+      }
+    }
+  }
+</main>

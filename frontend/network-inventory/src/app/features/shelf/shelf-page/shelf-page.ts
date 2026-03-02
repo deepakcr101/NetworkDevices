@@ -3,6 +3,7 @@ import { Shelf } from '../../../core/models/shelf';
 import { ShelfService } from '../../../core/services/shelf-service';
 import { DialogService } from '../../../shared/services/dialog';
 import { ShelfForm } from '../../../shared/components/shelf-form/shelf-form';
+import { Router } from '@angular/router';
 
 interface State {
   shelves: Shelf[];
@@ -19,6 +20,7 @@ interface State {
 export class ShelfPage {
 private readonly shelfApi = inject(ShelfService);
   private readonly dialogService = inject(DialogService);
+  private readonly router = inject(Router);
 
   readonly state = signal<State>({
     shelves: [],
@@ -80,5 +82,10 @@ private readonly shelfApi = inject(ShelfService);
         alert(`Error deleting shelf: ${err.message}`);
       },
     });
+  }
+
+  openHomePage(): void {
+    // Navigate back to the home page using the router.
+    this.router.navigate(['/']);
   }
 }

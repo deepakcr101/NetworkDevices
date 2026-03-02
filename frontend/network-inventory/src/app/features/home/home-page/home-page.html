@@ -1,1 +1,57 @@
-<p>home-page works!</p>
+<header class="page-header">
+      <h1>Welcome to My Inventory</h1>
+      <div class="actions">
+        <button class="button-primary" (click)="openCreateDeviceForm()">Create Device</button>
+        <button class="button-secondary" (click)="openShelfPage()">Shelves Page</button>
+      </div>
+    </header>
+
+    <main>
+      <h2>Available Devices</h2>
+      @switch (state().status) {
+        @case ('loading') {
+          <p aria-live="polite">Loading devices...</p>
+        }
+        @case ('loaded') {
+          @if (state().devices.length > 0) {
+            <div class="table-container">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Device Name</th>
+                    <th>Type</th>
+                    <th>Part Number</th>
+                    <th>Building</th>
+                    <th># Shelf Positions</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (device of state().devices; track device.deviceId) {
+                    <tr>
+                      <td>{{ device.deviceName }}</td>
+                      <td>{{ device.deviceType | titlecase }}</td>
+                      <td>{{ device.partNumber }}</td>
+                      <td>{{ device.buildingName }}</td>
+                      <td>{{ device.numberOfShelfPositions }}</td>
+                      <td>
+          <button (click)="openDeviceCard(device)">View Summary</button>
+          <button (click)="openEditDeviceForm(device)">Edit</button>
+          <button (click)="deleteDevice(device.deviceId)">Delete</button>
+</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          } @else {
+            <p>No devices found. Create one to get started!</p>
+          }
+        }
+        @case ('error') {
+          <p role="alert" class="error-message">
+            Failed to load devices. Please try again later. ({{ state().error }})
+          </p>
+        }
+      }
+    </main>

@@ -1,1 +1,39 @@
-<p>device-summary-card works!</p>
+@if (summary(); as s) {
+      <div class="summary-header">
+        <h2 id="dialog-title">{{ s.device.deviceName }}</h2>
+        <p>
+          {{ s.device.deviceType }} | {{ s.device.partNumber }} | {{ s.device.buildingName }}
+        </p>
+      </div>
+
+      <div class="shelf-positions">
+        <h3>Shelf Positions ({{ s.device.numberOfShelfPositions }})</h3>
+        <ul class="positions-grid">
+          @for (sp of s.positions; track sp.shelfPositionId) {
+            <li class="position-card" [class.occupied]="sp.isOccupied">
+              <div class="position-header">
+                <strong>Index {{ sp.index }}</strong>
+                <span class="status-badge" [class.occupied]="sp.isOccupied" [class.free]="!sp.isOccupied">
+                  {{ sp.isOccupied ? 'OCCUPIED' : 'FREE' }}
+                </span>
+              </div>
+
+              @if (sp.isOccupied && sp.shelf) {
+                <div class="shelf-details">
+                  <p><strong>Shelf:</strong> {{ sp.shelf.shelfName }}</p>
+                  <p><strong>Part #:</strong> {{ sp.shelf.partName }}</p>
+                </div>
+                <button (click)="freeShelfPosition(s.device.deviceId, sp.shelfPositionId)">
+                  Free Position
+                </button>
+              } @else {
+                <div class="shelf-details empty"><p>Empty</p></div>
+                <button (click)="addShelf(s.device.deviceId, sp.shelfPositionId)">Add Shelf</button>
+              }
+            </li>
+          }
+        </ul>
+      </div>
+    } @else {
+      <p>Loading device details...</p>
+    }

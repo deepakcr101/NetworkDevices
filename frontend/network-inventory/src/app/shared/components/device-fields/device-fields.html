@@ -1,0 +1,82 @@
+<form (submit)="onSubmit($event)" novalidate>
+  <div>
+    <label for="deviceName">Device Name</label>
+    <input id="deviceName" type="text" [formField]="form.deviceName" />
+    @if (form.deviceName().touched() && form.deviceName().invalid()) {
+      <ul class="error-list">
+        @for (e of form.deviceName().errors(); track $index) {
+          <li>{{ $any(e)?.message || 'Invalid' }}</li>
+        }
+      </ul>
+    }
+  </div>
+
+  <div>
+    <label for="deviceType">Device Type</label>
+    <input id="deviceType" type="text" [formField]="form.deviceType" />
+    @if (form.deviceType().touched() && form.deviceType().invalid()) {
+      <ul class="error-list">
+        @for (e of form.deviceType().errors(); track $index) {
+          <li>{{ $any(e)?.message || 'Invalid' }}</li>
+        }
+      </ul>
+    }
+  </div>
+
+  <div>
+    <label for="partNumber">Part Number</label>
+    <input id="partNumber" type="text" [formField]="form.partNumber" />
+    @if (form.partNumber().touched() && form.partNumber().invalid()) {
+      <ul class="error-list">
+        @for (e of form.partNumber().errors(); track $index) {
+          <li>{{ $any(e)?.message || 'Invalid' }}</li>
+        }
+      </ul>
+    }
+  </div>
+
+  <div>
+    <label for="buildingName">Building Name</label>
+    <input id="buildingName" type="text" [formField]="form.buildingName" />
+    @if (form.buildingName().touched() && form.buildingName().invalid()) {
+      <ul class="error-list">
+        @for (e of form.buildingName().errors(); track $index) {
+          <li>{{ $any(e)?.message || 'Invalid' }}</li>
+        }
+      </ul>
+    }
+  </div>
+
+  <div>
+  <label for="numberOfShelfPositions">Number of Shelf Positions</label>
+
+  @if (allowShelfPositionsEdit) {
+    <!-- Editable: wire the control -->
+    <input
+      id="numberOfShelfPositions"
+      type="number"
+      [formField]="form.numberOfShelfPositions"
+      autocomplete="off"
+    />
+  } @else {
+    <!-- Read-only: no [formField], just show current value -->
+    <input
+      id="numberOfShelfPositions"
+      type="number"
+      [value]="form.numberOfShelfPositions().value()"
+      disabled
+      autocomplete="off"
+    />
+  }
+
+  @if (form.numberOfShelfPositions().touched() && form.numberOfShelfPositions().invalid()) {
+    <ul class="error-list">
+      @for (e of form.numberOfShelfPositions().errors(); track $index) {
+        <li>{{ $any(e)?.message || 'Invalid' }}</li>
+      }
+    </ul>
+  }
+</div>
+
+  <button type="submit" [disabled]="form().invalid()">Save</button>
+</form>

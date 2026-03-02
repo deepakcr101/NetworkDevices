@@ -25,3 +25,28 @@ export interface DeviceSummary {
   device: Device;
   positions: ShelfPosition[];
 }
+
+
+export interface CreateDevicePayload {
+  deviceName: string;
+  deviceType: string;
+  partNumber: string;
+  buildingName: string;
+  numberOfShelfPositions: number;
+}
+
+
+// For updating a device. The properties are optional.
+export type UpdateDevicePayload = Partial<{
+  deviceName: string;
+  deviceType: string;
+  partNumber: string;
+  buildingName: string;
+}>;
+
+// For allocating a shelf. Matches the backend's AllocateRequest.
+export type AllocateShelfPayload = {
+  deviceId: string;
+  shelfPositionId: string;
+  shelfId: string;
+};

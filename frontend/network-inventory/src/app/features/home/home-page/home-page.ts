@@ -4,7 +4,11 @@ import { Device } from '../../../core/models/device';
 import { DeviceService } from '../../../core/services/device-service';
 import { DeviceSummaryCard } from '../../../shared/components/device-summary-card/device-summary-card';
 import { DialogService } from '../../../shared/services/dialog';
-import { DeviceForm } from '../../../shared/components/device-form/device-form';
+import { DeviceFields } from '../../../shared/components/device-fields/device-fields';
+import { DeviceCreateForm } from '../../devices/create/create-device-form/create-device-form';
+import { DeviceEditForm } from '../../devices/edit/edit-device-form/edit-device-form';
+import { Router } from '@angular/router';
+import { ShelfForm } from '../../../shared/components/shelf-form/shelf-form';
 
 interface State {
   devices: Device[];
@@ -16,65 +20,7 @@ interface State {
   selector: 'app-home-page',
   // Since this template is becoming larger, we can move it to an external file
   // for better organization, but inline is fine for now as requested.
-  template: `
-    <header class="page-header">
-      <h1>Welcome to My Inventory</h1>
-      <div class="actions">
-        <button class="button-primary" (click)="openCreateDeviceForm()">Create Device</button>
-        <button class="button-secondary" (click)="openCreateShelfForm()">Create Shelf</button>
-      </div>
-    </header>
-
-    <main>
-      <h2>Available Devices</h2>
-      @switch (state().status) {
-        @case ('loading') {
-          <p aria-live="polite">Loading devices...</p>
-        }
-        @case ('loaded') {
-          @if (state().devices.length > 0) {
-            <div class="table-container">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Device Name</th>
-                    <th>Type</th>
-                    <th>Part Number</th>
-                    <th>Building</th>
-                    <th># Shelf Positions</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  @for (device of state().devices; track device.deviceId) {
-                    <tr>
-                      <td>{{ device.deviceName }}</td>
-                      <td>{{ device.deviceType | titlecase }}</td>
-                      <td>{{ device.partNumber }}</td>
-                      <td>{{ device.buildingName }}</td>
-                      <td>{{ device.numberOfShelfPositions }}</td>
-                      <td>
-  <button (click)="openDeviceCard(device)">View Summary</button>
-  <button (click)="openEditDeviceForm(device)">Edit</button>
-  <button (click)="deleteDevice(device.deviceId)">Delete</button>
-</td>
-                    </tr>
-                  }
-                </tbody>
-              </table>
-            </div>
-          } @else {
-            <p>No devices found. Create one to get started!</p>
-          }
-        }
-        @case ('error') {
-          <p role="alert" class="error-message">
-            Failed to load devices. Please try again later. ({{ state().error }})
-          </p>
-        }
-      }
-    </main>
-  `,
+  templateUrl: './home-page.html',
   styleUrls: ['./home-page.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [TitleCasePipe] // Import pipes directly into standalone components
@@ -82,6 +28,7 @@ interface State {
 export class HomePage {
   private readonly deviceService = inject(DeviceService);
   private readonly dialogService = inject(DialogService);
+  private readonly router = inject(Router);
 
   readonly state = signal<State>({
     devices: [],
@@ -101,21 +48,11 @@ export class HomePage {
     });
   }
 
+ 
 
   openDeviceCard(device: Device): void {
-    console.log('Opening summary for:', device.deviceName);
-
-    this.deviceService.getDeviceSummary(device.deviceId).subscribe({
-      next: (summary) => {
-        // Pass the raw summary directly
-        this.dialogService.open(DeviceSummaryCard, summary);
-      },
-      error: (err) => {
-        console.error('Failed to retrieve device summary:', err);
-        alert(`Error retrieving device summary: ${err.message}`);
-      }
-    });
-  }
+  this.router.navigate(['/home/summary', device.deviceId]);
+}
 
   deleteDevice(deviceId: string): void {
     if (!confirm('Are you sure you want to delete this device?')) {
@@ -135,16 +72,36 @@ export class HomePage {
     });
   }
 
-  openEditDeviceForm(device: Device): void {
-    this.dialogService.open(DeviceForm, { mode: 'edit', device });
-  }
-  openCreateDeviceForm(): void {
-    console.log('Opening create device form...');
-    // Logic to open DeviceForm in a dialog will be added here.
+  
+
+
+openEditDeviceForm(device: Device): void {
+  const dialogRef = this.dialogService.open(DeviceEditForm, {
+    device, // this will be provided as DIALOG_DATA
+  });
+  dialogRef.subscribe(result => {
+    if (result === 'success') this.loadDevices();
+  });
+}
+
+
+openCreateDeviceForm(): void {
+  // Create form doesn't need any inputs
+  const dialogRef = this.dialogService.open(DeviceCreateForm);
+
+  dialogRef.subscribe((result) => {
+    if (result === 'success') {
+      this.loadDevices();
+    }
+  });
+}
+
+
+  openShelfPage(): void {
+    // We can use the router to navigate to the dedicated shelf management page.
+    // This is often better UX than opening a simple form from a different context.
+    this.router.navigate(['/shelves']);
   }
 
-  openCreateShelfForm(): void {
-    console.log('Opening create shelf form...');
-    // Logic to open ShelfForm in a dialog will be added here.
-  }
+
 }
