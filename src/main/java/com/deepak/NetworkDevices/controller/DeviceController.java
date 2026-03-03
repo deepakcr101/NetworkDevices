@@ -23,7 +23,7 @@ public class DeviceController {
     public ResponseEntity<List<DeviceDto>> getAllDevices() {
         // 1. If service.getDevices() returns an empty list,
         //    this returns 200 OK with [] (Correct REST behavior).
-        // 2. Passing null to .ok() still returns 200, so ensure your service
+        // 2. Passing null to .ok() still returns 200,
         //    returns Collections.emptyList() instead of null.
         return ResponseEntity.ok(service.getDevices());
     }

@@ -58,9 +58,7 @@
 		<dependency>
 			<groupId>org.neo4j.driver</groupId>
 			<artifactId>neo4j-java-driver</artifactId>
-			<!-- In most cases omit the version and let Spring Boot manage it.
-                 If you *must* pin a version, add a property:
-                 <version>${neo4j-java-driver.version}</version> -->
+
 		</dependency>
 
 		<!-- Lombok -->

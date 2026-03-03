@@ -42,24 +42,19 @@ freeShelfPosition(deviceId: string, shelfPositionId: string) {
   
   
 
-  createDevice(payload: CreateDevicePayload): Observable<string> {
-      return this.http.post(this.apiUrl, payload, {
-        headers: new HttpHeaders({
-          'Content-Type': 'application/json',
-          'Accept': 'text/plain',           
-        }),
-        responseType: 'text',               
-        observe: 'response',                
-      }).pipe(
-        map((res: HttpResponse<string>) => (res.body ?? '').trim())
-      );
-  }
+createDevice(payload: CreateDevicePayload): Observable<string> {
+    return this.http.post(this.apiUrl, payload, {
+      headers: new HttpHeaders({
+        'Content-Type': 'application/json',
+        'Accept': 'text/plain',           
+      }),
+      responseType: 'text',               
+      observe: 'response',                
+    }).pipe(
+      map((res: HttpResponse<string>) => (res.body ?? '').trim())
+    );
+}
 
-
-
-
-  
-  
 updateDevice(deviceId: string, payload: UpdateDevicePayload) {
     return this.http.patch(`${this.apiUrl}/${deviceId}`, payload, {
       headers: new HttpHeaders({

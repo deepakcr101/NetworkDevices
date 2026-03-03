@@ -1,3 +1,4 @@
+// src/app/shared/services/dialog.ts
 import {
   Injectable,
   inject,
@@ -9,9 +10,16 @@ import {
   Type,
 } from '@angular/core';
 import { DOCUMENT } from '@angular/common';
-import { Subject, Observable } from 'rxjs'; 
+import { Subject, Observable } from 'rxjs';
 import { Dialog } from '../components/dialog/dialog';
 import { DIALOG_DATA } from './dialog.config';
+
+type DialogEntry = {
+  dialogRef: ComponentRef<Dialog>;
+  contentRef: ComponentRef<any>;
+  result$: Subject<any>;
+  previouslyFocused: HTMLElement | null;
+};
 
 @Injectable({ providedIn: 'root' })
 export class DialogService {
@@ -19,60 +27,74 @@ export class DialogService {
   private readonly injector = inject(EnvironmentInjector);
   private readonly document = inject(DOCUMENT);
 
-  private dialogComponentRef?: ComponentRef<Dialog>;
-  private contentComponentRef?: any; // ComponentRef<unknown>
-  private previouslyFocusedElement?: HTMLElement;
-   private result$?: Subject<any>;
-   
-  open<T>(componentType: Type<T>, data?: any): Observable<any> {
-    this.previouslyFocusedElement = this.document.activeElement as HTMLElement;
+  /** Support nested dialogs by keeping a stack of entries */
+  private stack: DialogEntry[] = [];
 
-    // Create a new Subject for each dialog instance
-    this.result$ = new Subject<any>();
+  open<T>(componentType: Type<T>, data?: any): Observable<any> {
+    const previouslyFocused = (this.document.activeElement as HTMLElement) ?? null;
 
     const dialogInjector = Injector.create({
       providers: [{ provide: DIALOG_DATA, useValue: data }],
       parent: this.injector,
     });
 
-    const contentComponentRef = createComponent(componentType, {
+    // Create the dialog content (your feature component)
+    const contentRef = createComponent(componentType, {
       environmentInjector: this.injector,
       elementInjector: dialogInjector,
     });
 
-    this.dialogComponentRef = createComponent(Dialog, {
+    // Create the dialog chrome/shell that hosts the projected content
+    const dialogRef = createComponent(Dialog, {
       environmentInjector: this.injector,
-      projectableNodes: [[contentComponentRef.location.nativeElement]],
+      projectableNodes: [[contentRef.location.nativeElement]],
     });
 
-    this.dialogComponentRef.instance.close.subscribe(() => this.close());
+    // Top-most result channel
+    const result$ = new Subject<any>();
+    this.stack.push({ dialogRef, contentRef, result$, previouslyFocused });
 
-    this.appRef.attachView(contentComponentRef.hostView);
-    this.appRef.attachView(this.dialogComponentRef.hostView);
+    // Wire shell 'close' output to close the top-most dialog
+    dialogRef.instance.close.subscribe(() => this.close());
 
-    this.document.body.appendChild(this.dialogComponentRef.location.nativeElement);
-    
-    // ### CHANGE 2: Return the Subject as an Observable ###
-    return this.result$.asObservable();
+    // Attach views
+    this.appRef.attachView(contentRef.hostView);
+    this.appRef.attachView(dialogRef.hostView);
+
+    // Put shell in DOM (content is projected inside it)
+    this.document.body.appendChild(dialogRef.location.nativeElement);
+
+    // (Optional) Raise z-index for stacking (last opened is on top)
+    dialogRef.location.nativeElement.style.zIndex = (1000 + this.stack.length * 2).toString();
+
+    return result$.asObservable();
   }
 
-  // ### CHANGE 3: Update the `close` method to accept a result ###
+  
   close(result?: any): void {
-    if (!this.dialogComponentRef) {
-      return;
-    }
+    const entry = this.stack.pop();
+    if (!entry) return;
 
-    this.appRef.detachView(this.dialogComponentRef.hostView);
-    this.dialogComponentRef.destroy();
-    this.dialogComponentRef = undefined;
+    const { dialogRef, contentRef, result$, previouslyFocused } = entry;
 
-    this.previouslyFocusedElement?.focus();
+    // Detach & destroy content first
+    this.appRef.detachView(contentRef.hostView);
+    contentRef.destroy();
 
-    // ### CHANGE 4: Emit the result and complete the Subject ###
-    if (this.result$) {
-      this.result$.next(result);
-      this.result$.complete();
-      this.result$ = undefined;
-    }
+    // Then detach & destroy shell
+    this.appRef.detachView(dialogRef.hostView);
+    dialogRef.destroy();
+
+    // Restore focus to the element active before this dialog opened
+    previouslyFocused?.focus();
+
+    // Resolve the result for the dialog that was opened
+    result$.next(result);
+    result$.complete();
+  }
+
+  /** Optional: close all open dialogs (useful on route change) */
+  closeAll(): void {
+    while (this.stack.length) this.close();
   }
 }

@@ -14,7 +14,7 @@ interface State {
 
 @Component({
   selector: 'app-allocate-shelf-dialog',
-  standalone: true, // ✅ required for dynamic createComponent
+  standalone: true, 
   templateUrl: './allocate-shelf-dialog.html',
   styleUrls: ['./allocate-shelf-dialog.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -52,7 +52,9 @@ export class AllocateShelfDialog {
   openCreateAndAllocateShelf(): void {
     const createDialogRef = this.dialogService.open(ShelfForm, { mode: 'create' });
     createDialogRef.subscribe((result) => {
-      if (result === 'success') this.loadAvailableShelves();
+      if (result === 'success'){
+        this.loadAvailableShelves();
+      }
     });
   }
 }
