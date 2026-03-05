@@ -38,6 +38,7 @@ public class DeviceServiceImpl implements DeviceService {
         params.put("numSP", req.numberOfShelfPositions());
         params.put("database", database);
         return repo.createDevice(params).asString();
+
     }
 
     @Override

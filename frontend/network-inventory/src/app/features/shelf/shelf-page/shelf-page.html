@@ -1,9 +1,16 @@
 <header class="page-header">
       <h1>Shelf Management</h1>
-      <button class="button-primary" (click)="openCreateShelfForm()">Create Shelf</button>
+      <div class="actions">
+        <button class="button-primary" (click)="openCreateShelfForm()">Create Shelf</button>
       <button class="button-secondary" (click)="openHomePage()">Home Page</button>
+      </div>
     </header>
+    <div class="search-bar">
+      <input type="text" placeholder="Search shelves..." [ngModel]="searchQuery()"
+      (ngModelChange)="searchQuery.set($event)">
 
+      <button (click)="searchQuery.set('')">Clear</button>
+    </div>
     <main>
       <h2>Available Shelves</h2>
       @switch (state().status) {
@@ -11,7 +18,7 @@
           <p aria-live="polite">Loading shelves...</p>
         }
         @case ('loaded') {
-          @if (state().shelves.length > 0) {
+          @if (filteredShelves().length > 0) {
             <table>
               <thead>
                 <tr>
@@ -25,9 +32,9 @@
                 </tr>
               </thead>
               <tbody>
-                @for (shelf of state().shelves; track shelf.shelfId) {
+                @for (shelf of filteredShelves(); track shelf.shelfId) {
                   <tr>
-                    <td>{{ state().shelves.indexOf(shelf) + 1 }}</td>
+                    <td>{{ filteredShelves().indexOf(shelf) + 1 }}</td>
                     <td>{{ shelf.shelfName }}</td>
                     
                     <td>{{ shelf.partName }}</td>

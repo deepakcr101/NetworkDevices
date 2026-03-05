@@ -15,6 +15,7 @@
   }
 
   .button-primary {
+    margin-left: 10px;
     padding: 0.5rem 1rem;
     font-size: 1rem;
     font-weight: bold;
@@ -26,7 +27,7 @@
     transition: background-color 0.3s;
 
     &:hover {
-      background-color: #f5f5f5;
+      background-color: #3f2727;
     }
   }
 }

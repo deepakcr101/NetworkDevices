@@ -1,9 +1,11 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal, computed } from '@angular/core';
 import { Shelf } from '../../../core/models/shelf';
 import { ShelfService } from '../../../core/services/shelf-service';
 import { DialogService } from '../../../shared/services/dialog';
 import { ShelfForm } from '../../../shared/components/shelf-form/shelf-form';
 import { Router } from '@angular/router';
+import { TitleCasePipe } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 
 interface State {
   shelves: Shelf[];
@@ -16,9 +18,10 @@ interface State {
   templateUrl: './shelf-page.html',
   styleUrls: ['./shelf-page.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [FormsModule]
 })
 export class ShelfPage {
-private readonly shelfApi = inject(ShelfService);
+  private readonly shelfApi = inject(ShelfService);
   private readonly dialogService = inject(DialogService);
   private readonly router = inject(Router);
 
@@ -32,6 +35,19 @@ private readonly shelfApi = inject(ShelfService);
     this.loadShelves();
   }
 
+  readonly searchQuery = signal('');
+  readonly filteredShelves = computed(() => {
+    const query = this.searchQuery().toLowerCase().trim();
+    const shelves = this.state().shelves;
+    if (!query) {
+      return shelves;
+    }
+    return shelves.filter(shelf =>
+      shelf.shelfName.toLowerCase().includes(query) ||
+      shelf.partName.toLowerCase().includes(query)
+    );
+  });
+
   loadShelves(): void {
     this.state.set({ shelves: [], status: 'loading', error: null });
     this.shelfApi.getShelves().subscribe({
@@ -40,7 +56,7 @@ private readonly shelfApi = inject(ShelfService);
     });
   }
 
-  
+
   openCreateShelfForm(): void {
     // The dialog returns an observable that we can subscribe to.
     const dialogRef = this.dialogService.open(ShelfForm, { mode: 'create' });
@@ -53,7 +69,7 @@ private readonly shelfApi = inject(ShelfService);
     });
   }
 
-  
+
   openEditShelfForm(shelf: Shelf): void {
     const dialogRef = this.dialogService.open(ShelfForm, { mode: 'edit', shelf });
 
@@ -65,7 +81,7 @@ private readonly shelfApi = inject(ShelfService);
     });
   }
 
-  
+
   deleteShelf(shelfId: string): void {
     if (!confirm('Are you sure you want to delete this shelf? This action cannot be undone.')) {
       return;

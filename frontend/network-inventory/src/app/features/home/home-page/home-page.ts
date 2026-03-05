@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { TitleCasePipe } from '@angular/common';
 import { Device } from '../../../core/models/device';
 import { DeviceService } from '../../../core/services/device-service';
@@ -9,6 +9,7 @@ import { DeviceCreateForm } from '../../devices/create/create-device-form/create
 import { DeviceEditForm } from '../../devices/edit/edit-device-form/edit-device-form';
 import { Router } from '@angular/router';
 import { ShelfForm } from '../../../shared/components/shelf-form/shelf-form';
+import { FormsModule } from '@angular/forms';
 
 interface State {
   devices: Device[];
@@ -18,12 +19,10 @@ interface State {
 
 @Component({
   selector: 'app-home-page',
-  // Since this template is becoming larger, we can move it to an external file
-  // for better organization, but inline is fine for now as requested.
   templateUrl: './home-page.html',
   styleUrls: ['./home-page.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TitleCasePipe] // Import pipes directly into standalone components
+  imports: [TitleCasePipe,FormsModule] // Import pipes directly into standalone components
 })
 export class HomePage {
   private readonly deviceService = inject(DeviceService);
@@ -39,7 +38,21 @@ export class HomePage {
   constructor() {
     this.loadDevices();
   }
-
+  
+  readonly searchQuery = signal('');
+  readonly filteredDevices = computed(() => {
+    const query = this.searchQuery().toLowerCase().trim();
+    const devices = this.state().devices;
+    if(!query) {
+      return devices;
+    }
+    return devices.filter(device =>
+      device.deviceName.toLowerCase().includes(query) || 
+      device.deviceType.toLowerCase().includes(query) ||
+      device.partNumber.toLowerCase().includes(query) ||
+      device.buildingName.toLowerCase().includes(query)
+    );
+  });
   loadDevices(): void {
     this.state.set({ devices: [], status: 'loading', error: null });
     this.deviceService.getDevices().subscribe({
@@ -47,8 +60,6 @@ export class HomePage {
       error: (err) => this.state.update(s => ({ ...s, status: 'error', error: err.message })),
     });
   }
-
- 
 
   openDeviceCard(device: Device): void {
   this.router.navigate(['/home/summary', device.deviceId]);
@@ -98,8 +109,6 @@ openCreateDeviceForm(): void {
 
 
   openShelfPage(): void {
-    // We can use the router to navigate to the dedicated shelf management page.
-    // This is often better UX than opening a simple form from a different context.
     this.router.navigate(['/shelves']);
   }
 

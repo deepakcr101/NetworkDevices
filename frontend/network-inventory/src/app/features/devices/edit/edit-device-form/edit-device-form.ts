@@ -26,14 +26,14 @@ export class DeviceEditForm {
   // keep a single source of truth
   private _device: Device | null = null;
 
-  // (Optional) still keep the @Input setter if you ever open by input binding
+  // (Optional) still keep the @Input setter if we ever open by input binding
   @Input()
   set device(value: Device | null) {
     console.log('[DeviceEditForm] @Input device →', value);
     this.setDevice(value);
   }
 
-  // ✅ NEW: read from DIALOG_DATA (what your DialogService actually provides)
+  // read from DIALOG_DATA (what DialogService actually provides)
   constructor(@Optional() @Inject(DIALOG_DATA) data?: any) {
     console.log('[DeviceEditForm] DIALOG_DATA →', data);
     if (data?.device) {

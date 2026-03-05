@@ -16,6 +16,15 @@ h1 {
   margin: 0;
 }
 
+.actions {
+  display: flex;
+  gap: 1rem;
+}
+
+.table-container {
+  overflow-x: auto; // For responsiveness on small screens
+}
+
 table {
   width: 100%;
   border-collapse: collapse;
@@ -39,6 +48,7 @@ th {
 }
 
 button {
+  /* Basic button styling */
   padding: 0.5rem 1rem;
   border-radius: 4px;
   border: 1px solid transparent;

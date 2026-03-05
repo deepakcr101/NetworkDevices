@@ -4,7 +4,6 @@ import com.deepak.NetworkDevices.dto.request.CreateShelfRequest;
 import com.deepak.NetworkDevices.dto.request.UpdateShelfRequest;
 import com.deepak.NetworkDevices.dto.response.ShelfDto;
 import com.deepak.NetworkDevices.dto.response.ShelfLiteDto;
-import com.deepak.NetworkDevices.dto.response.ShelfWithStatusDto;
 
 import java.util.List;
 
