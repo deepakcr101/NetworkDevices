@@ -10,4 +10,22 @@ export interface Shelf {
   deviceId?: string;
   shelfPositionId?: string;
   status: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface createShelfPayload {
+  shelfName: string;
+  partName: string;
+}
+
+export type updateShelfPayload = Partial<{
+  shelfName: string;
+  partName: string;
+}>;
+
+export interface ShelfLite {
+  shelfId: string;
+  shelfName: string;
+  partName: string;
 }

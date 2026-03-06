@@ -51,7 +51,10 @@ export class ShelfPage {
   loadShelves(): void {
     this.state.set({ shelves: [], status: 'loading', error: null });
     this.shelfApi.getShelves().subscribe({
-      next: (shelves) => this.state.update(s => ({ ...s, shelves, status: 'loaded' })),
+      next: (shelves) => {
+        //console.log('Received shelves:', shelves[0]);
+        this.state.update(s => ({ ...s, shelves, status: 'loaded' }));
+      },
       error: (err) => this.state.update(s => ({ ...s, status: 'error', error: err.message })),
     });
   }
@@ -62,6 +65,7 @@ export class ShelfPage {
     const dialogRef = this.dialogService.open(ShelfForm, { mode: 'create' });
 
     dialogRef.subscribe(result => {
+      alert('Shelf created successfully!');
       // If the dialog was closed with a 'success' message, reload the shelf list.
       if (result === 'success') {
         this.loadShelves();
@@ -76,6 +80,7 @@ export class ShelfPage {
     dialogRef.subscribe(result => {
       // If the dialog was closed with a 'success' message, reload the shelf list.
       if (result === 'success') {
+        alert('Shelf updated successfully!');
         this.loadShelves();
       }
     });

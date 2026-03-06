@@ -2,7 +2,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { Shelf } from '../models/shelf';
+import { createShelfPayload, Shelf, ShelfLite, updateShelfPayload } from '../models/shelf';
 
 @Injectable({
   providedIn: 'root',
@@ -16,16 +16,16 @@ export class ShelfService {
   }
 
   // Gets shelves that are not currently installed in any device
-  getAvailableShelves(): Observable<Shelf[]> {
-    return this.http.get<Shelf[]>(`${this.apiUrl}/available`);
+  getAvailableShelves(): Observable<ShelfLite[]> {
+    return this.http.get<ShelfLite[]>(`${this.apiUrl}/available`);
   }
 
-  createShelf(shelfData: Omit<Shelf, 'id'>): Observable<Shelf> {
-    return this.http.post<Shelf>(this.apiUrl, shelfData);
+  createShelf(shelfData: Omit<Shelf, 'id'>): Observable<createShelfPayload> {
+    return this.http.post<createShelfPayload>(this.apiUrl, shelfData);
   }
 
-  updateShelf(shelfId: string, shelfData: Partial<Shelf>): Observable<Shelf> {
-    return this.http.patch<Shelf>(`${this.apiUrl}/${shelfId}`, shelfData);
+  updateShelf(shelfId: string, shelfData: Partial<Shelf>): Observable<updateShelfPayload> {
+    return this.http.patch<updateShelfPayload>(`${this.apiUrl}/${shelfId}`, shelfData);
   }
 
   deleteShelf(shelfId: string): Observable<void> {

@@ -1,6 +1,6 @@
 // src/app/shared/components/allocate-shelf-dialog/allocate-shelf-dialog.ts
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import { Shelf } from '../../../core/models/shelf';
+import { ShelfLite } from '../../../core/models/shelf';
 import { ShelfService } from '../../../core/services/shelf-service';
 import { DeviceService } from '../../../core/services/device-service';
 import { DialogService } from '../../../shared/services/dialog';
@@ -8,7 +8,7 @@ import { DIALOG_DATA } from '../../../shared/services/dialog.config';
 import { ShelfForm } from '../shelf-form/shelf-form';
 
 interface State {
-  shelves: Shelf[];
+  shelves: ShelfLite[];
   status: 'loading' | 'loaded' | 'error';
 }
 

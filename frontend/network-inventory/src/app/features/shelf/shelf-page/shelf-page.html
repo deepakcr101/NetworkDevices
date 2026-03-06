@@ -28,6 +28,8 @@
                   <th>Part Name</th>
                   <th>Status:DeviceName SP Index</th>
                   <!-- <th>Shelf Position ID</th> -->
+                   <th>Created At</th>
+                   <th>Last Updated</th>
                   <th>Actions</th>
                 </tr>
               </thead>
@@ -39,6 +41,8 @@
                     
                     <td>{{ shelf.partName }}</td>
                     <td>{{ shelf.status }}</td>
+                    <td>{{ shelf.createdAt }}</td>
+                    <td>{{ shelf.updatedAt }}</td>
                     <!-- <td>{{shelf.shelfPositionId}}</td> -->
                     <td>
                       <button (click)="openEditShelfForm(shelf)">Edit</button>

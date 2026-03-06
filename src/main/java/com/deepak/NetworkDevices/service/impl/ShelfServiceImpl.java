@@ -61,31 +61,7 @@ public class ShelfServiceImpl implements ShelfService {
 
     @Override
     public List<ShelfDto> listShelvesWithStatus() {
-        List<Record> rows = repo.listShelvesWithStatus(database);
-        List<ShelfDto> list = new ArrayList<>();
-
-        for (Record r : rows) {
-            //System.out.println("RAW: " + r.get("shelfDto"));
-            // Get the projected map as a Neo4j Value
-            org.neo4j.driver.Value v = r.get("shelfDto");
-
-            // Convert the Neo4j MapValue into a plain Java Map<String, String>
-            Map<String, String> m = v.asMap(val -> val.isNull() ? null : val.asString());
-
-            ShelfDto shelf = new ShelfDto(
-                    m.get("shelfId"),
-                    m.get("shelfName"),
-                    m.get("partName"),
-                    m.get("deviceId"),
-                    m.get("shelfPositionId"),
-                    m.get("status"),
-                    null, // createdAt
-                    null  // updatedAt
-            );
-
-            list.add(shelf);
-        }
-        return list;
+       return repo.listShelvesWithStatus(database);
     }
 
     @Override

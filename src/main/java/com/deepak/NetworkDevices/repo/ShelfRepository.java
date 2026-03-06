@@ -1,10 +1,11 @@
 package com.deepak.NetworkDevices.repo;
 
 
-import org.neo4j.driver.Record;
-import org.neo4j.driver.Driver;
-import org.neo4j.driver.SessionConfig;
+import com.deepak.NetworkDevices.dto.response.DeviceDto;
+import com.deepak.NetworkDevices.dto.response.ShelfDto;
+import org.neo4j.driver.*;
 
+import org.neo4j.driver.Record;
 import org.springframework.stereotype.Repository;
 
 
@@ -75,7 +76,7 @@ public class ShelfRepository {
         }
     }
 
-    public List<Record> listShelvesWithStatus(String database) {
+    public List<ShelfDto> listShelvesWithStatus(String database) {
         String cypher = """
         MATCH (s:Shelf)
        WHERE s.isDeleted = false
@@ -89,23 +90,43 @@ public class ShelfRepository {
        WITH s, p, d,
          CASE
            WHEN d IS NULL OR p IS NULL THEN null
-           ELSE d.deviceName + " " + toString(p.index)
+           ELSE d.deviceName + " SP" + toString(p.index)
          END AS statusLabel
        ORDER BY s.shelfName ASC
       
-      RETURN {
+      RETURN collect({
         shelfId: toString(s.shelfId),
         shelfName: toString(s.shelfName),
         partName: toString(s.partName),
         deviceId: CASE WHEN d IS NULL THEN null ELSE toString(d.deviceId) END,
         shelfPositionId: CASE WHEN p IS NULL THEN null ELSE toString(p.shelfPositionId) END,
         status: CASE WHEN statusLabel IS NULL THEN null ELSE toString(statusLabel) END,
-        createdAt: null,
-        updatedAt: null
-      } AS shelfDto
+        createdAt: s.createdAt,
+        updatedAt: s.updatedAt
+      }) AS shelfList
       """;
-        try (var session = driver.session(SessionConfig.forDatabase(database))) {
-            return session.executeRead(tx -> tx.run(cypher).list());
+        try (Session session = driver.session()) {
+            return session.executeRead(tx -> {
+                Result rs = tx.run(cypher);
+                // Since Cypher used 'collect(d)', there is exactly one record containing the list
+                if (rs.hasNext()) {
+                    Record record = rs.single();
+                    return record.get("shelfList").asList(v -> {
+                        // Access properties directly from the Value 'v' to handle types and nulls safely
+                        return new ShelfDto(
+                                v.get("shelfId").asString(null),
+                                v.get("shelfName").asString(null),
+                                v.get("partName").asString(null),
+                                v.get("deviceId").asString(null),
+                                v.get("shelfPositionId").asString(null),
+                                v.get("status").asString(null), // Safely returns null if property is missing/null
+                                v.get("createdAt").isNull() ? null : v.get("createdAt").asOffsetDateTime(),
+                                v.get("updatedAt").isNull() ? null : v.get("updatedAt").asOffsetDateTime()
+                        );
+                    });
+                }
+                return Collections.emptyList();
+            });
         }
     }
 
