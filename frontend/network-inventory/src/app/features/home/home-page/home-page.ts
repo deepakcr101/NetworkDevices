@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { TitleCasePipe } from '@angular/common';
+import { TitleCasePipe,DatePipe } from '@angular/common';
 import { Device } from '../../../core/models/device';
 import { DeviceService } from '../../../core/services/device-service';
 import { DeviceSummaryCard } from '../../../shared/components/device-summary-card/device-summary-card';
@@ -22,7 +22,7 @@ interface State {
   templateUrl: './home-page.html',
   styleUrls: ['./home-page.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TitleCasePipe,FormsModule] // Import pipes directly into standalone components
+  imports: [TitleCasePipe,FormsModule,DatePipe] // Import pipes directly into standalone components
 })
 export class HomePage {
   private readonly deviceService = inject(DeviceService);
@@ -62,6 +62,7 @@ export class HomePage {
   }
 
   openDeviceCard(device: Device): void {
+    // console.log(device);
   this.router.navigate(['/home/summary', device.deviceId]);
 }
 

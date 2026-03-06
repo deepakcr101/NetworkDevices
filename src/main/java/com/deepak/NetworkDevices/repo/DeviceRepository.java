@@ -76,7 +76,7 @@ public class DeviceRepository {
                                 node.get("numberOfShelfPositions").asInt(),
                                 // Check for null and provide a default or null
                                 node.get("createdAt").isNull() ? null : node.get("createdAt").asOffsetDateTime(),
-                                node.get("updateAt").isNull() ? null : node.get("updateAt").asOffsetDateTime()
+                                node.get("updatedAt").isNull() ? null : node.get("updatedAt").asOffsetDateTime()
                         );
                     });
                 }

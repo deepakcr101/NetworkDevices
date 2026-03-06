@@ -9,7 +9,7 @@ A Demo Project simulating the layered architecture of Networks vis simulating De
 1. Support CRUD operation for both Devices and Shelves and ShelfPosition created at the time of Device Creation only.
 2. Shelf can be added and freed from a Shelf Position.
 
-## Ket Tech Stacks Used:
+## Key Tech Stacks Used:
 * Java Spring Boot for Backend
 * Angular for Frontend
 * Neo4j Database

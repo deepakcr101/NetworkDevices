@@ -17,6 +17,8 @@ export interface Device {
   partNumber: string;
   buildingName: string;
   numberOfShelfPositions: number;
+  createdAt: string; 
+  updatedAt: string;
   
 }
 

@@ -28,6 +28,8 @@
                     <th>Part Number</th>
                     <th>Building</th>
                     <th># Shelf Positions</th>
+                    <th>Created At</th>
+                    <th>Last Updated</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
@@ -39,11 +41,13 @@
                       <td>{{ device.partNumber }}</td>
                       <td>{{ device.buildingName }}</td>
                       <td>{{ device.numberOfShelfPositions }}</td>
+                      <td>{{ device.createdAt | date:'short' }}</td>
+                      <td>{{ device.updatedAt | date:'short' }}</td>
                       <td>
           <button (click)="openDeviceCard(device)">View Summary</button>
           <button (click)="openEditDeviceForm(device)">Edit</button>
           <button (click)="deleteDevice(device.deviceId)">Delete</button>
-</td>
+                     </td>
                     </tr>
                   }
                 </tbody>
