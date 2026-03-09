@@ -23,13 +23,13 @@ export class DeviceEditForm {
   private readonly deviceService = inject(DeviceService);
   private readonly dialogService = inject(DialogService);
 
-  // keep a single source of truth
+  // single source of truth
   private _device: Device | null = null;
 
   // (Optional) still keep the @Input setter if we ever open by input binding
   @Input()
   set device(value: Device | null) {
-    console.log('[DeviceEditForm] @Input device →', value);
+    //console.log('[DeviceEditForm] @Input device →', value);
     this.setDevice(value);
   }
 

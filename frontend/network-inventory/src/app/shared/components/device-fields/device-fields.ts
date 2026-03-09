@@ -48,7 +48,7 @@ export class DeviceFields {
   /**
    * Whether to allow editing the numberOfShelfPositions field. Usually:
    * - create: true (editable)
-   * - edit: false (immutable in most systems)
+   * - edit: false 
    */
   @Input() allowShelfPositionsEdit = true;
 
@@ -82,9 +82,9 @@ export class DeviceFields {
     });
   });
 
-  /**
-   * Let parent trigger submit via (submit) on <form>.
-   * We validate here and bubble up only if valid.
+  /*
+   Let parent trigger submit via (submit) on <form>.
+   We validate here and bubble up only if valid.
    */
   onSubmit(ev: Event) {
     ev.preventDefault();
