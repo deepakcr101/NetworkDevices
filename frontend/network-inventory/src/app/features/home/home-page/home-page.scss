@@ -16,6 +16,23 @@ h1 {
   margin: 0;
 }
 
+.header-container {
+  display: flex;
+  justify-content: space-between; /* Pushes H2 to left, Search to right */
+  align-items: center;           /* Vertically centers them */
+  margin-bottom: 10px;
+}
+
+h2 {
+  margin: 0; /* Clears default browser spacing */
+}
+
+.search-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 .actions {
   display: flex;
   gap: 1rem;
@@ -48,7 +65,7 @@ th {
 }
 
 button {
-  /* Basic button styling */
+  margin: 5px 5px 5px 5px;
   padding: 0.5rem 1rem;
   border-radius: 4px;
   border: 1px solid transparent;

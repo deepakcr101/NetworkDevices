@@ -53,6 +53,7 @@ export class HomePage {
       device.buildingName.toLowerCase().includes(query)
     );
   });
+
   loadDevices(): void {
     this.state.set({ devices: [], status: 'loading', error: null });
     this.deviceService.getDevices().subscribe({
@@ -63,8 +64,8 @@ export class HomePage {
 
   openDeviceCard(device: Device): void {
     // console.log(device);
-  this.router.navigate(['/home/summary', device.deviceId]);
-}
+    this.router.navigate(['/home/summary', device.deviceId]);
+  }
 
   deleteDevice(deviceId: string): void {
     if (!confirm('Are you sure you want to delete this device?')) {

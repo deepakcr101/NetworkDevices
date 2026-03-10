@@ -38,7 +38,7 @@ public class ShelfRepository {
     public Optional<Record> getShelf(String shelfId, String database) {
         String cypher = """
       MATCH (s:Shelf {shelfId:$shelfId}) WHERE s.isDeleted=false
-      OPTIONAL MATCH (p:ShelfPosition)-[:HAS]->(s)
+      OPTIONAL MATCH (p:ShelfPosition)-[r:HAS]->(s) WHERE r.isDeleted=false
       OPTIONAL MATCH (d:Device)-[:HAS]->(p)
       RETURN s, d, p
       """;
@@ -67,8 +67,7 @@ public class ShelfRepository {
       SET s.isDeleted=true, s.updatedAt=datetime()
       WITH s
       OPTIONAL MATCH (p:ShelfPosition)-[r:HAS]->(s)
-      DELETE r
-      SET p.isOccupied=false, p.shelfId=null, p.updatedAt=datetime()
+      SET r.isDeleted=true,p.isOccupied=false, p.shelfId=null, p.updatedAt=datetime()
       RETURN s.shelfId AS shelfId
       """;
         try (var session = driver.session(SessionConfig.forDatabase(database))) {
@@ -81,7 +80,7 @@ public class ShelfRepository {
         MATCH (s:Shelf)
        WHERE s.isDeleted = false
 
-       OPTIONAL MATCH (p:ShelfPosition)-[:HAS]->(s)
+       OPTIONAL MATCH (p:ShelfPosition)-[r:HAS {isDeleted: False}]->(s)
        WHERE p.isDeleted = false
 
        OPTIONAL MATCH (d:Device)-[:HAS]->(p)
@@ -89,7 +88,7 @@ public class ShelfRepository {
 
        WITH s, p, d,
          CASE
-           WHEN d IS NULL OR p IS NULL THEN null
+           WHEN d IS NULL OR p IS NULL THEN "Available"
            ELSE d.deviceName + " SP" + toString(p.index)
          END AS statusLabel
        ORDER BY s.shelfName ASC
@@ -100,7 +99,7 @@ public class ShelfRepository {
         partName: toString(s.partName),
         deviceId: CASE WHEN d IS NULL THEN null ELSE toString(d.deviceId) END,
         shelfPositionId: CASE WHEN p IS NULL THEN null ELSE toString(p.shelfPositionId) END,
-        status: CASE WHEN statusLabel IS NULL THEN null ELSE toString(statusLabel) END,
+        status: statusLabel,
         createdAt: s.createdAt,
         updatedAt: s.updatedAt
       }) AS shelfList
@@ -133,13 +132,18 @@ public class ShelfRepository {
     public List<Record> listAvailableShelves(String database) {
         String cypher = """
         MATCH (s:Shelf)
-        WHERE s.isDeleted = false AND NOT (:ShelfPosition)-[:HAS]->(s)
-       RETURN {
-         shelfId: toString(s.shelfId),
-         shelfName: toString(s.shelfName),
-         partName: toString(s.partName)
-       } AS shelfDto
-      """;
+                                  WHERE s.isDeleted = false
+                                    AND NOT EXISTS {
+                                      MATCH (:ShelfPosition)-[r:HAS]->(s)
+                                      WHERE r.isDeleted = false
+                                    }
+                                  RETURN {
+                                    shelfId: toString(s.shelfId),
+                                    shelfName: toString(s.shelfName),
+                                    partName: toString(s.partName)
+                                  } AS shelfDto
+  
+     """;
         try (var session = driver.session(SessionConfig.forDatabase(database))) {
             return session.executeRead(tx -> tx.run(cypher).list());
         }

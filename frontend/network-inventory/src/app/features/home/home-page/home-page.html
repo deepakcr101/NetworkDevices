@@ -5,14 +5,18 @@
         <button class="button-secondary" (click)="openShelfPage()">Shelves Page</button>
       </div>
     </header>
-    <div class="search-bar">
-      <input type="text" placeholder="Search devices..." [ngModel]="searchQuery()"
-      (ngModelChange)="searchQuery.set($event)">
-
-      <button (click)="searchQuery.set('')">Clear</button>
-    </div>
+    
     <main>
-      <h2>Available Devices</h2>
+      <div class="header-container">
+<h2>Available Devices</h2>
+      <div class="search-bar">
+        <input type="text" placeholder="Search devices..." [ngModel]="searchQuery()"
+        (ngModelChange)="searchQuery.set($event)">
+
+        <button (click)="searchQuery.set('')">Clear</button>
+    </div>
+      </div>
+      
       @switch (state().status) {
         @case ('loading') {
           <p aria-live="polite">Loading devices...</p>

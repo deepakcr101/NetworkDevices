@@ -72,7 +72,7 @@ export class DialogService {
 
   
   close(result?: any): void {
-    const entry = this.stack.pop();
+    const entry = this.stack.pop(); // Get the most recent dialog from the stack
     if (!entry) return;
 
     const { dialogRef, contentRef, result$, previouslyFocused } = entry;

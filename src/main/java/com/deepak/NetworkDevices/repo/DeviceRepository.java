@@ -80,7 +80,7 @@ public class DeviceRepository {
                         );
                     });
                 }
-                    return Collections.emptyList();
+                return Collections.emptyList();
             });
         }
     }
@@ -93,8 +93,8 @@ public class DeviceRepository {
                  OPTIONAL MATCH (d)-[:HAS]->(p:ShelfPosition)\s
                  WHERE p.isDeleted = false
     
-                 OPTIONAL MATCH (p)-[:HAS]->(s:Shelf)\s
-                 WHERE s.isDeleted = false
+                 OPTIONAL MATCH (p)-[r:HAS]->(s:Shelf)\s
+                 WHERE  r.isDeleted = false AND s.isDeleted = false
     
                  // 1. Sort the rows by the desired property first
                  WITH d, p, s\s
@@ -151,8 +151,7 @@ public class DeviceRepository {
       SET p.isDeleted=true, p.isOccupied=false, p.shelfId=null, p.updatedAt=datetime()
       WITH d
       OPTIONAL MATCH (d)-[:HAS]->(:ShelfPosition)-[r:HAS]->(s:Shelf)
-      DELETE r
-      SET s.updatedAt=datetime()
+      SET s.updatedAt=datetime(),r.isDeleted = false
       RETURN d.deviceId AS deviceId
       """;
         try (Session session = driver.session()) {
@@ -166,7 +165,7 @@ public class DeviceRepository {
       MATCH (d)-[:HAS]->(p:ShelfPosition {shelfPositionId:$spId})
         WHERE p.isDeleted=false AND p.isOccupied=false
       MATCH (s:Shelf {shelfId:$shelfId}) WHERE s.isDeleted=false
-      AND NOT ( ()-[:HAS]->(s) )
+      AND NOT EXISTS {(s)<-[r:HAS]-(sp:ShelfPosition) WHERE r.isDeleted=false}
       CREATE (p)-[:HAS]->(s)
       SET p.isOccupied=true, p.shelfId=s.shelfId, p.updatedAt=datetime(),
           d.updatedAt=datetime(), s.updatedAt=datetime()
@@ -185,8 +184,7 @@ public class DeviceRepository {
         String cypher = """
       MATCH (d:Device {deviceId:$deviceId})-[:HAS]->(p:ShelfPosition {shelfPositionId:$spId})
       MATCH (p)-[r:HAS]->(s:Shelf)
-      DELETE r
-      SET p.isOccupied=false, p.shelfId=null, p.updatedAt=datetime(),
+      SET r.isDeleted=true,p.isOccupied=false, p.shelfId=null, p.updatedAt=datetime(),
           d.updatedAt=datetime(), s.updatedAt=datetime()
       RETURN d.deviceId AS deviceId
       """;

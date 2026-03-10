@@ -5,14 +5,18 @@
       <button class="button-secondary" (click)="openHomePage()">Home Page</button>
       </div>
     </header>
-    <div class="search-bar">
+    
+    <main>
+      <div class="header-container">
+        <h2>Shelves in Our System</h2>
+<div class="search-bar">
       <input type="text" placeholder="Search shelves..." [ngModel]="searchQuery()"
       (ngModelChange)="searchQuery.set($event)">
 
       <button (click)="searchQuery.set('')">Clear</button>
     </div>
-    <main>
-      <h2>Available Shelves</h2>
+      </div>
+      
       @switch (state().status) {
         @case ('loading') {
           <p aria-live="polite">Loading shelves...</p>
@@ -40,7 +44,11 @@
                     <td>{{ shelf.shelfName }}</td>
                     
                     <td>{{ shelf.partName }}</td>
-                    <td>{{ shelf.status }}</td>
+                    @if(shelf.status ==="Available") {
+                      <td class="bg-green">{{ shelf.status}}</td>
+                    } @else {
+                      <td class="bg-red">{{ shelf.status }}</td>
+                    }
                     <td>{{ shelf.createdAt }}</td>
                     <td>{{ shelf.updatedAt }}</td>
                     <!-- <td>{{shelf.shelfPositionId}}</td> -->

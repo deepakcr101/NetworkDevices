@@ -65,9 +65,9 @@ export class ShelfPage {
     const dialogRef = this.dialogService.open(ShelfForm, { mode: 'create' });
 
     dialogRef.subscribe(result => {
-      alert('Shelf created successfully!');
       // If the dialog was closed with a 'success' message, reload the shelf list.
       if (result === 'success') {
+        alert('Shelf created successfully!');
         this.loadShelves();
       }
     });
@@ -95,7 +95,7 @@ export class ShelfPage {
     this.shelfApi.deleteShelf(shelfId).subscribe({
       next: () => {
         alert('Shelf deleted successfully!');
-        // Add this line to refresh the data from the server.
+        // to refresh the data from the server.
         this.loadShelves();
       },
       error: (err) => {
