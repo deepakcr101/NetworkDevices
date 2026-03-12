@@ -165,8 +165,8 @@ public class DeviceRepository {
       MATCH (d)-[:HAS]->(p:ShelfPosition {shelfPositionId:$spId})
         WHERE p.isDeleted=false AND p.isOccupied=false
       MATCH (s:Shelf {shelfId:$shelfId}) WHERE s.isDeleted=false
-      AND NOT EXISTS {(s)<-[r:HAS]-(sp:ShelfPosition) WHERE r.isDeleted=false}
-      CREATE (p)-[:HAS]->(s)
+      AND NOT EXISTS {(s)<-[r:HAS {isDeleted:false}]-(sp:ShelfPosition)}
+      CREATE (p)-[:HAS {isDeleted:false}]->(s)
       SET p.isOccupied=true, p.shelfId=s.shelfId, p.updatedAt=datetime(),
           d.updatedAt=datetime(), s.updatedAt=datetime()
       RETURN d.deviceId AS deviceId, p.shelfPositionId AS shelfPositionId, p.index AS index,

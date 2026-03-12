@@ -6,6 +6,9 @@ import { ShelfForm } from '../../../shared/components/shelf-form/shelf-form';
 import { Router } from '@angular/router';
 import { TitleCasePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+//import { HeaderService } from '../../../shared/services/header-service';
+import { takeUntil, Subject } from 'rxjs';
+
 
 interface State {
   shelves: Shelf[];
@@ -18,12 +21,15 @@ interface State {
   templateUrl: './shelf-page.html',
   styleUrls: ['./shelf-page.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule]
+  imports: [FormsModule,]
 })
 export class ShelfPage {
   private readonly shelfApi = inject(ShelfService);
   private readonly dialogService = inject(DialogService);
   private readonly router = inject(Router);
+  
+  //a subject to manage unsubscription and prevent memory leaks
+  private readonly destroy$ = new Subject<void>();
 
   readonly state = signal<State>({
     shelves: [],
@@ -33,8 +39,10 @@ export class ShelfPage {
 
   constructor() {
     this.loadShelves();
+    //this.listenForActions();
   }
-
+  
+  
   readonly searchQuery = signal('');
   readonly filteredShelves = computed(() => {
     const query = this.searchQuery().toLowerCase().trim();
@@ -109,4 +117,11 @@ export class ShelfPage {
     // Navigate back to the home page using the router.
     this.router.navigate(['/']);
   }
+
+  // // Method to be called when the component is destroyed
+  // ngOnDestroy(): void {
+  //   this.destroy$.next();
+  //   this.destroy$.complete();
+  // }
+
 }

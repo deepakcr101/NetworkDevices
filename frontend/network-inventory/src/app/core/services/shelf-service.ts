@@ -20,7 +20,7 @@ export class ShelfService {
     return this.http.get<ShelfLite[]>(`${this.apiUrl}/available`);
   }
 
-  createShelf(shelfData: Omit<Shelf, 'id'>): Observable<createShelfPayload> {
+  createShelf(shelfData: createShelfPayload): Observable<createShelfPayload> {
     return this.http.post<createShelfPayload>(this.apiUrl, shelfData);
   }
 

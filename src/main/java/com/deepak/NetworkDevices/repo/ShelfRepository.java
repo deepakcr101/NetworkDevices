@@ -38,7 +38,7 @@ public class ShelfRepository {
     public Optional<Record> getShelf(String shelfId, String database) {
         String cypher = """
       MATCH (s:Shelf {shelfId:$shelfId}) WHERE s.isDeleted=false
-      OPTIONAL MATCH (p:ShelfPosition)-[r:HAS]->(s) WHERE r.isDeleted=false
+      OPTIONAL MATCH (p:ShelfPosition)-[r:HAS {isDeleted: false}]->(s) WHERE r.isDeleted=false
       OPTIONAL MATCH (d:Device)-[:HAS]->(p)
       RETURN s, d, p
       """;
@@ -80,7 +80,7 @@ public class ShelfRepository {
         MATCH (s:Shelf)
        WHERE s.isDeleted = false
 
-       OPTIONAL MATCH (p:ShelfPosition)-[r:HAS {isDeleted: False}]->(s)
+       OPTIONAL MATCH (p:ShelfPosition)-[r:HAS {isDeleted: false}]->(s)
        WHERE p.isDeleted = false
 
        OPTIONAL MATCH (d:Device)-[:HAS]->(p)
@@ -132,17 +132,16 @@ public class ShelfRepository {
     public List<Record> listAvailableShelves(String database) {
         String cypher = """
         MATCH (s:Shelf)
-                                  WHERE s.isDeleted = false
-                                    AND NOT EXISTS {
-                                      MATCH (:ShelfPosition)-[r:HAS]->(s)
-                                      WHERE r.isDeleted = false
-                                    }
-                                  RETURN {
-                                    shelfId: toString(s.shelfId),
-                                    shelfName: toString(s.shelfName),
-                                    partName: toString(s.partName)
-                                  } AS shelfDto
-  
+          WHERE s.isDeleted = false
+            AND NOT EXISTS {
+              MATCH (:ShelfPosition)-[r:HAS]->(s)
+              WHERE r.isDeleted = false
+            }
+          RETURN {
+            shelfId: toString(s.shelfId),
+            shelfName: toString(s.shelfName),
+            partName: toString(s.partName)
+          } AS shelfDto
      """;
         try (var session = driver.session(SessionConfig.forDatabase(database))) {
             return session.executeRead(tx -> tx.run(cypher).list());

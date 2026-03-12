@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { TitleCasePipe,DatePipe } from '@angular/common';
+import { TitleCasePipe, DatePipe } from '@angular/common';
 import { Device } from '../../../core/models/device';
 import { DeviceService } from '../../../core/services/device-service';
 import { DeviceSummaryCard } from '../../../shared/components/device-summary-card/device-summary-card';
@@ -10,6 +10,8 @@ import { DeviceEditForm } from '../../devices/edit/edit-device-form/edit-device-
 import { Router } from '@angular/router';
 import { ShelfForm } from '../../../shared/components/shelf-form/shelf-form';
 import { FormsModule } from '@angular/forms';
+import { takeUntil,Subject } from 'rxjs';
+//import { HeaderService } from '../../../shared/services/header-service';
 
 interface State {
   devices: Device[];
@@ -22,12 +24,15 @@ interface State {
   templateUrl: './home-page.html',
   styleUrls: ['./home-page.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TitleCasePipe,FormsModule,DatePipe] // Import pipes directly into standalone components
+  imports: [TitleCasePipe, FormsModule, DatePipe,] // Import pipes directly into standalone components
+ // Import pipes directly into standalone components
 })
 export class HomePage {
   private readonly deviceService = inject(DeviceService);
   private readonly dialogService = inject(DialogService);
   private readonly router = inject(Router);
+  // private readonly headerService = inject(HeaderService);
+  // private readonly destroy$ = new Subject<void>();
 
   readonly state = signal<State>({
     devices: [],
@@ -37,17 +42,18 @@ export class HomePage {
 
   constructor() {
     this.loadDevices();
+    //this.listenForActions();
   }
-  
+
   readonly searchQuery = signal('');
   readonly filteredDevices = computed(() => {
     const query = this.searchQuery().toLowerCase().trim();
     const devices = this.state().devices;
-    if(!query) {
+    if (!query) {
       return devices;
     }
     return devices.filter(device =>
-      device.deviceName.toLowerCase().includes(query) || 
+      device.deviceName.toLowerCase().includes(query) ||
       device.deviceType.toLowerCase().includes(query) ||
       device.partNumber.toLowerCase().includes(query) ||
       device.buildingName.toLowerCase().includes(query)
@@ -61,7 +67,14 @@ export class HomePage {
       error: (err) => this.state.update(s => ({ ...s, status: 'error', error: err.message })),
     });
   }
-
+ 
+  // private listenForActions(): void {
+  //   this.headerService.createDeviceRequested$
+  //   .pipe(takeUntil(this.destroy$))
+  //   .subscribe(() => {
+  //     this.openCreateDeviceForm();
+  //   });
+  // }
   openDeviceCard(device: Device): void {
     // console.log(device);
     this.router.navigate(['/home/summary', device.deviceId]);
@@ -85,34 +98,38 @@ export class HomePage {
     });
   }
 
-  
 
 
-openEditDeviceForm(device: Device): void {
-  const dialogRef = this.dialogService.open(DeviceEditForm, {
-    device, // this will be provided as DIALOG_DATA
-  });
-  dialogRef.subscribe(result => {
-    if (result === 'success') this.loadDevices();
-  });
-}
+
+  openEditDeviceForm(device: Device): void {
+    const dialogRef = this.dialogService.open(DeviceEditForm, {
+      device, // this will be provided as DIALOG_DATA
+    });
+    dialogRef.subscribe(result => {
+      if (result === 'success') this.loadDevices();
+    });
+  }
 
 
-openCreateDeviceForm(): void {
-  // Create form doesn't need any inputs
-  const dialogRef = this.dialogService.open(DeviceCreateForm);
+  openCreateDeviceForm(): void {
+    // Create form doesn't need any inputs
+    const dialogRef = this.dialogService.open(DeviceCreateForm);
 
-  dialogRef.subscribe((result) => {
-    if (result === 'success') {
-      this.loadDevices();
-    }
-  });
-}
+    dialogRef.subscribe((result) => {
+      if (result === 'success') {
+        alert('Device created successfully!');
+        this.loadDevices();
+      }
+    });
+  }
 
 
   openShelfPage(): void {
     this.router.navigate(['/shelves']);
   }
 
-
+  // ngOnDestroy(): void {
+  //   this.destroy$.next();
+  //   this.destroy$.complete();
+  // }
 }

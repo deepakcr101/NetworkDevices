@@ -6,11 +6,13 @@ import { DialogService } from '../../../shared/services/dialog';
 import { DeviceSummary } from '../../../core/models/device';
 import { AllocateShelfDialog } from '../allocate-shelf-dialog/allocate-shelf-dialog';
 
+
 @Component({
   selector: 'app-device-summary-card',
   templateUrl: './device-summary-card.html',
   styleUrls: ['./device-summary-card.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [],
 })
 export class DeviceSummaryCard {
   private readonly route = inject(ActivatedRoute);

@@ -7,7 +7,6 @@ import { Shelf } from '../../../core/models/shelf';
 
 @Component({
   selector: 'app-shelf-form',
-  // ... template remains the same ...
   template: `
     <form [formGroup]="shelfForm" (ngSubmit)="submitForm()">
       <h2>{{ mode === 'create' ? 'Create Shelf' : 'Edit Shelf' }}</h2>
@@ -52,6 +51,7 @@ export class ShelfForm {
     }
 
     if (this.mode === 'create') {
+      //console.log('Creating shelf with data:', this.shelfForm.value);
       this.shelfApi.createShelf(this.shelfForm.value).subscribe({
         next: () => this.dialogService.close('success'),
         error: (err) => alert(`Error creating shelf: ${err.message}`),
